@@ -11,4 +11,4 @@ dist
 !.env.example
 !.env.test
 
-.key
+*.key
