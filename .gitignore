@@ -1,0 +1,14 @@
+node_modules
+require.js
+jquery.js
+.idea
+.vscode
+dist
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+.key
