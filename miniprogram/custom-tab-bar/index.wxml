@@ -1,0 +1,26 @@
+<view class="tabbar">
+    <view
+        wx:for="{{tabItems}}"
+        wx:key="pagePath"
+        class="tab-item {{selectedPath === item.pagePath ? 'tab-item-active' : ''}}"
+        data-path="{{item.pagePath}}"
+        bindtap="switchTab">
+        <view wx:if="{{item.key === 'home'}}" class="tab-icon tab-icon-home">
+            <view class="home-body"></view>
+            <view class="home-window"></view>
+            <view class="home-flame"></view>
+        </view>
+        <view wx:if="{{item.key === 'explore'}}" class="tab-icon tab-icon-orbit">
+            <view class="orbit-ring"></view>
+            <view class="orbit-planet"></view>
+        </view>
+        <view wx:if="{{item.key === 'game'}}" class="tab-icon tab-icon-game">
+            <view class="game-body"></view>
+            <view class="game-pad game-pad-h"></view>
+            <view class="game-pad game-pad-v"></view>
+            <view class="game-dot game-dot-1"></view>
+            <view class="game-dot game-dot-2"></view>
+        </view>
+        <text class="tab-text">{{item.text}}</text>
+    </view>
+</view>

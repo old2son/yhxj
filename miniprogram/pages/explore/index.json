@@ -1,0 +1,8 @@
+{
+    "navigationBarTitleText": "宇宙探索",
+    "backgroundColor": "#03001e",
+    "backgroundTextStyle": "light",
+    "usingComponents": {
+        "space-layer": "/components/space-layer/index"
+    }
+}

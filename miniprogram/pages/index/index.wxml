@@ -1,0 +1,115 @@
+<view class="page-shell">
+    <space-layer></space-layer>
+    <view wx:if="{{loadingVisible}}" class="loading-screen">
+        <view class="meteor meteor-1"></view>
+        <view class="meteor meteor-2"></view>
+        <view class="meteor meteor-3"></view>
+        <view class="loading-brand">
+            <view class="loading-logo">
+                <view class="logo-ring"></view>
+                <view class="logo-orbit"></view>
+                <view class="logo-core"></view>
+            </view>
+            <view class="loading-title">星际漫游者</view>
+            <view class="loading-subtitle">WeChat Mini Program Demo</view>
+        </view>
+        <view class="loading-footer">
+            <view class="loading-track">
+                <view
+                    class="loading-bar"
+                    style="width: {{loadingPercent}}%;"></view>
+            </view>
+            <text class="loading-percent">{{loadingPercent}}%</text>
+            <text class="loading-tip">{{loadingTip}}</text>
+        </view>
+    </view>
+    <scroll-view
+        class="page-content"
+        scroll-y
+        enhanced
+        show-scrollbar="{{false}}">
+        <view class="content-inner">
+            <view class="hero-card">
+                <view class="hero-badge">每日探索</view>
+                <view class="hero-title">征服未知的</view>
+                <view class="hero-title">深空领域</view>
+                <view class="hero-desc"
+                    >搭载全新星图导航系统，带领我们深入解密星系与暗物质的终极奥秘。</view
+                >
+                <view class="progress-card">
+                    <view class="progress-head">
+                        <text class="progress-label">当前银河探索进度</text>
+                        <text class="progress-value">{{progress}}%</text>
+                    </view>
+                    <view class="progress-track">
+                        <view
+                            class="progress-fill"
+                            style="width: {{progress}}%;"></view>
+                    </view>
+                </view>
+            </view>
+            <view class="section-grid">
+                <view
+                    class="action-card action-card-cyan"
+                    bindtap="goExplore">
+                    <view class="action-icon action-icon-book">
+                        <view class="book-spine"></view>
+                        <view class="book-cover"></view>
+                        <view class="book-line book-line-1"></view>
+                        <view class="book-line book-line-2"></view>
+                    </view>
+                    <view class="action-title">宇宙科普书</view>
+                    <view class="action-desc">解锁八大行星与宇宙现象</view>
+                </view>
+                <view
+                    class="action-card action-card-pink"
+                    bindtap="goGame">
+                    <view class="action-icon action-icon-ufo">
+                        <view class="ufo-dome"></view>
+                        <view class="ufo-body"></view>
+                        <view class="ufo-light ufo-light-1"></view>
+                        <view class="ufo-light ufo-light-2"></view>
+                        <view class="ufo-light ufo-light-3"></view>
+                    </view>
+                    <view class="action-title">星际大作战</view>
+                    <view class="action-desc">驾驶飞船拦截来袭陨石</view>
+                </view>
+            </view>
+            <view class="quote-card">
+                <view class="quote-mark">"</view>
+                <view class="section-title">今日星际物语</view>
+                <view class="quote-text">"{{currentQuote.text}}"</view>
+                <view class="quote-footer">
+                    <text class="quote-author">- {{currentQuote.author}}</text>
+                    <view class="quote-btn" bindtap="nextQuote">换一个</view>
+                </view>
+            </view>
+            <view class="fact-card">
+                <view class="fact-main">
+                    <view class="fact-icon">?</view>
+                    <view class="fact-copy">
+                        <view class="fact-title">{{funFactTitle}}</view>
+                        <view class="fact-desc">{{funFactBrief}}</view>
+                    </view>
+                </view>
+                <view class="fact-btn" bindtap="openFactModal">去看看</view>
+            </view>
+        </view>
+    </scroll-view>
+    <view wx:if="{{showFactModal}}" class="modal-mask" bindtap="closeFactModal">
+        <view class="modal-panel" catchtap="noop">
+            <view class="modal-handle"></view>
+            <view class="modal-icon">
+                <view class="atom-core"></view>
+                <view class="atom-ring atom-ring-1"></view>
+                <view class="atom-ring atom-ring-2"></view>
+                <view class="atom-ring atom-ring-3"></view>
+            </view>
+            <view class="modal-title">恒星数量大揭秘</view>
+            <view class="modal-desc"
+                >银河系中约有1000亿到4000亿颗恒星。假设你每秒数出一颗恒星，即使完全不停歇，也需要花费大约3000年。</view
+            >
+            <view class="modal-btn" bindtap="closeFactModal">太震撼了</view>
+        </view>
+    </view>
+</view>

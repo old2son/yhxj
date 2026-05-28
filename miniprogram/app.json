@@ -1,0 +1,39 @@
+{
+    "pages": [
+        "pages/index/index",
+        "pages/explore/index",
+        "pages/game/index",
+        "pages/logs/logs"
+    ],
+    "window": {
+        "navigationBarTextStyle": "white",
+        "navigationBarTitleText": "星际漫游者",
+        "navigationBarBackgroundColor": "#03001e",
+        "backgroundColor": "#03001e",
+        "backgroundTextStyle": "light"
+    },
+    "tabBar": {
+        "custom": true,
+        "color": "#71717a",
+        "selectedColor": "#22d3ee",
+        "backgroundColor": "#020617",
+        "borderStyle": "black",
+        "list": [
+            {
+                "pagePath": "pages/index/index",
+                "text": "星空首页"
+            },
+            {
+                "pagePath": "pages/explore/index",
+                "text": "宇宙探索"
+            },
+            {
+                "pagePath": "pages/game/index",
+                "text": "拦截游戏"
+            }
+        ]
+    },
+    "style": "v2",
+    "componentFramework": "glass-easel",
+    "lazyCodeLoading": "requiredComponents"
+}

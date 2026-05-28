@@ -1,0 +1,18 @@
+/** app.wxss **/
+page {
+    background: #03001e;
+    color: #ffffff;
+    font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+}
+
+button {
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+    background: transparent;
+    border: none;
+}
+
+button::after {
+    border: none;
+}

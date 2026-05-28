@@ -1,0 +1,154 @@
+<view class="page-shell">
+    <!-- message：Error: 62:0:unexpected character `\n`
+File: pages/explore/index.wxml
+appid: wx277bc04fe36608e4
+openid: o6zAJs6kZv25wG0jgttkbcQ8vXu0
+ideVersion: 2.01.2510260
+osType: win32-x64
+time: 2026-05-28 14:54:21 -->
+
+    <space-layer></space-layer>
+
+    <scroll-view
+        class="page-content"
+        scroll-y
+        enhanced
+        show-scrollbar="{{false}}">
+        <view class="content-inner">
+            <view class="intro-card">
+                <view class="intro-badge">星际微百科</view>
+                <view class="intro-title">触摸星球卡片</view>
+                <view class="intro-title">解锁宇宙知识</view>
+                <view class="intro-desc">
+                    参考原型中的宇宙探索页，整理太阳系、黑洞与星云三类核心科普内容。
+                </view>
+            </view>
+
+            <view class="card-list">
+                <view
+                    wx:for="{{planetList}}"
+                    wx:key="key"
+                    class="planet-card planet-card-{{item.theme}}"
+                    data-key="{{item.key}}"
+                    bindtap="openPlanetDetail">
+                    <view class="planet-symbol planet-symbol-{{item.theme}}">
+                        <view
+                            wx:if="{{item.key === 'solar'}}"
+                            class="icon-solar">
+                            <view class="solar-core"></view>
+                            <view class="solar-ray solar-ray-1"></view>
+                            <view class="solar-ray solar-ray-2"></view>
+                            <view class="solar-ray solar-ray-3"></view>
+                            <view class="solar-ray solar-ray-4"></view>
+                        </view>
+                        <view
+                            wx:if="{{item.key === 'blackhole'}}"
+                            class="icon-blackhole">
+                            <view class="blackhole-core"></view>
+                            <view class="blackhole-ring"></view>
+                        </view>
+                        <view
+                            wx:if="{{item.key === 'nebula'}}"
+                            class="icon-nebula">
+                            <view class="nebula-cloud nebula-cloud-1"></view>
+                            <view class="nebula-cloud nebula-cloud-2"></view>
+                            <view class="nebula-cloud nebula-cloud-3"></view>
+                            <view class="nebula-star"></view>
+                        </view>
+                    </view>
+                    <view class="planet-copy">
+                        <view class="planet-title-row">
+                            <view class="planet-title">{{item.title}}</view>
+                            <view class="planet-subtitle"
+                                >{{item.subtitle}}</view
+                            >
+                        </view>
+                        <view class="planet-desc">{{item.description}}</view>
+                        <view class="planet-badge">{{item.badge}}</view>
+                    </view>
+                    <view class="planet-arrow">⭕️</view>
+                </view>
+            </view>
+
+            <view class="quiz-card">
+                <view class="quiz-badge">知识大挑战</view>
+                <view class="quiz-title"
+                    >太阳发出的光到达地球大约需要多少时间？</view
+                >
+
+                <view class="quiz-options">
+                    <view
+                        wx:for="{{quizOptions}}"
+                        wx:key="id"
+                        class="quiz-option {{selectedOptionId === item.id && answerStatus === 'correct' ? 'quiz-option-correct' : ''}} {{selectedOptionId === item.id && answerStatus === 'wrong' ? 'quiz-option-wrong' : ''}} {{selectedOptionId && selectedOptionId !== item.id ? 'quiz-option-disabled' : ''}}"
+                        data-id="{{item.id}}"
+                        bindtap="answerQuestion">
+                        {{item.label}}
+                    </view>
+                </view>
+
+                <view
+                    wx:if="{{answerFeedback}}"
+                    class="quiz-feedback quiz-feedback-{{answerStatus}}">
+                    {{answerFeedback}}
+                </view>
+
+                <view
+                    wx:if="{{answerFeedback}}"
+                    class="quiz-reset"
+                    bindtap="resetAnswer">
+                    重新作答
+                </view>
+            </view>
+        </view>
+    </scroll-view>
+
+    <view
+        wx:if="{{showPlanetModal}}"
+        class="modal-mask"
+        bindtap="closePlanetDetail">
+        <view class="modal-panel" catchtap="noop">
+            <view class="modal-handle"></view>
+            <view class="modal-symbol modal-symbol-{{selectedPlanet.theme}}">
+                <view
+                    wx:if="{{selectedPlanet.key === 'solar'}}"
+                    class="icon-solar">
+                    <view class="solar-core"></view>
+                    <view class="solar-ray solar-ray-1"></view>
+                    <view class="solar-ray solar-ray-2"></view>
+                    <view class="solar-ray solar-ray-3"></view>
+                    <view class="solar-ray solar-ray-4"></view>
+                </view>
+                <view
+                    wx:if="{{selectedPlanet.key === 'blackhole'}}"
+                    class="icon-blackhole">
+                    <view class="blackhole-core"></view>
+                    <view class="blackhole-ring"></view>
+                </view>
+                <view
+                    wx:if="{{selectedPlanet.key === 'nebula'}}"
+                    class="icon-nebula">
+                    <view class="nebula-cloud nebula-cloud-1"></view>
+                    <view class="nebula-cloud nebula-cloud-2"></view>
+                    <view class="nebula-cloud nebula-cloud-3"></view>
+                    <view class="nebula-star"></view>
+                </view>
+            </view>
+            <view class="modal-title">{{selectedPlanet.detailTitle}}</view>
+            <view class="modal-badge">{{selectedPlanet.detailBadge}}</view>
+
+            <view class="modal-section">
+                <view class="modal-text">{{selectedPlanet.detailDesc}}</view>
+            </view>
+
+            <view class="fact-box">
+                <view class="fact-box-title">你知道吗？</view>
+                <view class="fact-box-text">{{selectedPlanet.detailFact}}</view>
+            </view>
+
+            <view class="modal-btn" bindtap="closePlanetDetail"
+                >返回宇宙探索</view
+            >
+        </view>
+    </view>
+</view>

@@ -1,0 +1,1662 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>微信小程序 - 星际漫游者原型</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+		<style>
+			body {
+				font-family:
+					'Inter',
+					-apple-system,
+					'SF Pro SC',
+					'SF Pro Text',
+					'Helvetica Neue',
+					Arial,
+					sans-serif;
+				background-color: #03001e;
+			}
+			/* 隐藏滚动条 */
+			.no-scrollbar::-webkit-scrollbar {
+				display: none;
+			}
+			.no-scrollbar {
+				-ms-overflow-style: none;
+				scrollbar-width: none;
+			}
+			/* 星空闪烁动画 */
+			@keyframes twinkle {
+				0%,
+				100% {
+					opacity: 0.3;
+				}
+				50% {
+					opacity: 1;
+				}
+			}
+			.star-blink {
+				animation: twinkle 3s infinite ease-in-out;
+			}
+			/* 微信小程序胶囊按钮样式 */
+			.capsule-btn {
+				background: rgba(0, 0, 0, 0.15);
+				border: 0.5px solid rgba(255, 255, 255, 0.25);
+				backdrop-filter: blur(10px);
+			}
+			/* 游戏画布适配样式 */
+			#gameCanvas {
+				background: radial-gradient(circle at bottom, #0f172a, #020617);
+			}
+		</style>
+	</head>
+	<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4">
+		<!-- 手机外壳容器 (模拟iPhone) -->
+		<div
+			class="relative w-full h-full max-w-md md:h-[840px] bg-black md:rounded-[40px] md:shadow-2xl md:ring-12 md:ring-zinc-800 overflow-hidden flex flex-col border border-zinc-900"
+		>
+			<!-- 顶部的刘海屏 (仅在桌面端模拟器显示) -->
+			<div
+				class="hidden md:block absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-6 bg-black rounded-b-2xl z-50"
+			></div>
+
+			<!-- =================== 1. 流星雨加载页面 =================== -->
+			<div
+				id="loadingScreen"
+				class="absolute inset-0 z-50 bg-[#02020a] flex flex-col justify-between items-center py-16 transition-opacity duration-700 ease-in-out"
+			>
+				<!-- 流星雨 Canvas 背景 -->
+				<canvas id="meteorCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+				<div class="relative z-10 flex flex-col items-center mt-12">
+					<div
+						class="w-20 h-20 bg-gradient-to-tr from-violet-600 to-cyan-400 rounded-3xl flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-4 animate-bounce"
+					>
+						<i class="fa-solid fa-user-astronaut text-white text-4xl"></i>
+					</div>
+					<h1
+						class="text-2xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-200 to-indigo-400"
+					>
+						星际漫游者
+					</h1>
+					<p class="text-xs text-zinc-400 tracking-widest mt-2 uppercase">WeChat Mini Program Demo</p>
+				</div>
+
+				<div class="relative z-10 w-full px-12 flex flex-col items-center">
+					<div class="w-full h-1 bg-zinc-900 rounded-full overflow-hidden mb-3">
+						<div
+							id="progressBar"
+							class="h-full w-0 bg-gradient-to-r from-cyan-500 to-violet-500 rounded-full transition-all duration-100"
+						></div>
+					</div>
+					<span id="loadingPercent" class="text-cyan-400 font-mono text-sm tracking-widest">0%</span>
+					<p id="loadingTip" class="text-xs text-zinc-500 mt-2 tracking-wide animate-pulse">
+						正在链接太空港口...
+					</p>
+				</div>
+			</div>
+
+			<!-- =================== 小程序主体外壳 =================== -->
+			<!-- 小程序头部栏 (Status Bar & Navigation Bar) -->
+			<header
+				class="relative shrink-0 text-white z-40 transition-colors duration-300 bg-slate-950/80 border-b border-white/5 backdrop-blur-md"
+			>
+				<!-- 手机虚拟系统状态栏 -->
+				<div class="h-10 flex items-center justify-between px-6 pt-2 text-xs text-zinc-400">
+					<span class="font-medium font-mono" id="phoneTime">17:24</span>
+					<div class="flex items-center space-x-1.5">
+						<i class="fa-solid fa-signal"></i>
+						<span class="font-bold">5G</span>
+						<i class="fa-solid fa-battery-three-quarters"></i>
+					</div>
+				</div>
+				<!-- 小程序专属标题与胶囊栏 -->
+				<div class="h-12 flex items-center justify-between px-4 pb-2 relative">
+					<!-- 靠左：小程序标题 / 返回键 -->
+					<div class="flex items-center space-x-2">
+						<span id="navTitle" class="text-base font-semibold tracking-wide">星际漫游者</span>
+					</div>
+
+					<!-- 靠右：微信经典胶囊按钮 -->
+					<div
+						class="capsule-btn rounded-full px-3.5 py-1.5 flex items-center space-x-3 text-white/95 text-[11px] font-bold"
+					>
+						<button class="hover:opacity-70 transition"><i class="fa-solid fa-ellipsis"></i></button>
+						<div class="w-px h-3 bg-white/20"></div>
+						<button class="hover:opacity-70 transition" onclick="resetDemo()">
+							<i class="fa-regular fa-circle"></i>
+						</button>
+					</div>
+				</div>
+			</header>
+
+			<!-- =================== 核心内容容器 (页面切换区) =================== -->
+			<main class="flex-1 overflow-hidden relative bg-slate-950">
+				<!-- 静态星空背景 -->
+				<div class="absolute inset-0 pointer-events-none opacity-40 z-0 star-blink">
+					<div class="absolute top-10 left-10 w-1 h-1 bg-white rounded-full"></div>
+					<div class="absolute top-24 left-64 w-1.5 h-1.5 bg-cyan-300 rounded-full"></div>
+					<div class="absolute top-48 left-16 w-0.5 h-0.5 bg-white rounded-full"></div>
+					<div class="absolute top-72 left-80 w-1 h-1 bg-indigo-300 rounded-full"></div>
+					<div class="absolute top-96 left-40 w-1.5 h-1.5 bg-teal-200 rounded-full"></div>
+					<div class="absolute bottom-24 left-72 w-1 h-1 bg-white rounded-full"></div>
+				</div>
+
+				<!-- 页面一：首页 (Home Page) -->
+				<section
+					id="pageHome"
+					class="absolute inset-0 flex flex-col overflow-y-auto no-scrollbar pb-6 z-10 transition-transform duration-300"
+				>
+					<!-- 英雄宣传卡片 -->
+					<div class="p-5 mt-3">
+						<div
+							class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-cyan-950 p-6 border border-cyan-500/20 shadow-xl shadow-indigo-950/40"
+						>
+							<div
+								class="absolute right-[-20px] bottom-[-20px] w-48 h-48 opacity-20 bg-cover bg-center rounded-full bg-[radial-gradient(circle,_#06b6d4_0%,_transparent_70%)]"
+							></div>
+							<span
+								class="bg-cyan-500/10 text-cyan-400 text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full border border-cyan-500/20"
+							>
+								每日探索
+							</span>
+							<h2 class="text-2xl font-bold mt-3 leading-tight text-white">征服未知的<br />深空领域</h2>
+							<p class="text-xs text-zinc-400 mt-2 max-w-[70%]">
+								搭载全新星图导航系统，带领我们深入解密星系与暗物质的终极奥秘。
+							</p>
+
+							<!-- 交互：探索进度条 -->
+							<div class="mt-5 bg-white/5 rounded-2xl p-3 border border-white/5">
+								<div class="flex justify-between items-center text-[10px] text-zinc-400 mb-1.5">
+									<span class="flex items-center gap-1"
+										><i class="fa-solid fa-compass animate-spin text-cyan-400"></i>
+										当前银河探索进度</span
+									>
+									<span class="text-cyan-400 font-mono font-bold">64.8%</span>
+								</div>
+								<div class="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+									<div
+										class="h-full w-[64.8%] bg-gradient-to-r from-cyan-400 to-indigo-500 rounded-full"
+									></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- 快捷功能九宫格 -->
+					<div class="px-5 grid grid-cols-2 gap-4">
+						<button
+							onclick="switchTab('info')"
+							class="flex flex-col items-start p-4 bg-slate-900/60 rounded-2xl border border-white/5 text-left hover:bg-slate-900 transition active:scale-95"
+						>
+							<div
+								class="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-cyan-400 mb-3 text-lg"
+							>
+								<i class="fa-solid fa-book-atlas"></i>
+							</div>
+							<h3 class="font-semibold text-sm text-white">宇宙科普书</h3>
+							<p class="text-[10px] text-zinc-500 mt-1">解锁八大行星与宇宙现象</p>
+						</button>
+						<button
+							onclick="switchTab('game')"
+							class="flex flex-col items-start p-4 bg-slate-900/60 rounded-2xl border border-white/5 text-left hover:bg-slate-900 transition active:scale-95"
+						>
+							<div
+								class="w-10 h-10 bg-pink-500/10 rounded-xl flex items-center justify-center text-pink-400 mb-3 text-lg"
+							>
+								<i class="fa-solid fa-rocket animate-pulse"></i>
+							</div>
+							<h3 class="font-semibold text-sm text-white">星际大作战</h3>
+							<p class="text-[10px] text-zinc-500 mt-1">驾驶UFO消灭来袭陨石</p>
+						</button>
+					</div>
+
+					<!-- 交互组件：今日天文奇遇（名言生成器） -->
+					<div class="p-5">
+						<div
+							class="bg-gradient-to-r from-slate-900 to-zinc-900 rounded-2xl p-5 border border-white/5 relative overflow-hidden"
+						>
+							<div class="absolute top-2 right-4 text-6xl text-white/5 font-serif pointer-events-none">
+								“
+							</div>
+							<h3 class="text-xs font-semibold text-zinc-400 flex items-center gap-1.5 mb-3">
+								<i class="fa-solid fa-seedling text-teal-400"></i> 今日星际物语
+							</h3>
+							<p id="spaceQuote" class="text-xs text-zinc-300 leading-relaxed min-h-[40px]">
+								"星空最美妙的地方，在于所有的尘埃最终都会重新组合，诞生出无限奇迹。"
+							</p>
+							<div class="mt-4 pt-3 border-t border-white/5 flex justify-between items-center">
+								<span id="quoteAuthor" class="text-[10px] text-zinc-500">— 卡尔·萨根《宇宙》</span>
+								<button
+									onclick="generateQuote()"
+									class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition active:scale-90"
+								>
+									<i class="fa-solid fa-arrow-rotate-right"></i> 换一个
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- 趣味科普互动卡片 -->
+					<div class="px-5 mb-4">
+						<div
+							class="bg-indigo-950/40 rounded-2xl p-4 border border-indigo-500/10 flex items-center justify-between"
+						>
+							<div class="flex items-center space-x-3">
+								<div
+									class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400"
+								>
+									<i class="fa-solid fa-circle-question"></i>
+								</div>
+								<div>
+									<h4 class="text-xs font-semibold text-white">银河系里有多少颗恒星？</h4>
+									<p class="text-[10px] text-zinc-400 mt-0.5">约1000亿至4000亿颗</p>
+								</div>
+							</div>
+							<button
+								onclick="openInteractiveModal('starCount')"
+								class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-3 py-1.5 rounded-lg font-medium transition active:scale-95"
+							>
+								去看看
+							</button>
+						</div>
+					</div>
+				</section>
+
+				<!-- 页面二：科普介绍页 (Info Page) -->
+				<section
+					id="pageInfo"
+					class="absolute inset-0 flex flex-col overflow-y-auto no-scrollbar pb-6 z-10 hidden transition-transform duration-300"
+				>
+					<!-- 头部背景卡 -->
+					<div class="p-5 bg-gradient-to-b from-slate-900 to-transparent">
+						<h2 class="text-lg font-bold text-white flex items-center gap-2">
+							<i class="fa-solid fa-globe text-cyan-400"></i> 星际微百科
+						</h2>
+						<p class="text-xs text-zinc-400 mt-1">触摸下方星球卡片，解锁令人惊叹的硬核宇宙物理知识。</p>
+					</div>
+
+					<!-- 科普分类网格 -->
+					<div class="px-5 grid grid-cols-1 gap-4">
+						<!-- 卡片 太阳系 -->
+						<div
+							onclick="openPlanetDetail('solar')"
+							class="bg-slate-900/80 rounded-2xl p-4 border border-white/5 flex items-center gap-4 cursor-pointer hover:border-cyan-500/30 transition duration-300"
+						>
+							<div
+								class="w-16 h-16 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0"
+							>
+								<i class="fa-solid fa-sun text-orange-400 text-3xl animate-pulse"></i>
+							</div>
+							<div class="flex-1 min-w-0">
+								<h3 class="font-bold text-sm text-white">太阳系家族 (Solar System)</h3>
+								<p class="text-[11px] text-zinc-400 mt-1 truncate">
+									由八大行星、卫星以及无数微型天体组成...
+								</p>
+								<span
+									class="inline-block bg-orange-500/15 text-orange-400 text-[9px] px-1.5 py-0.5 rounded mt-2"
+									>基础天文</span
+								>
+							</div>
+							<i class="fa-solid fa-chevron-right text-zinc-600"></i>
+						</div>
+
+						<!-- 卡片 黑洞 -->
+						<div
+							onclick="openPlanetDetail('blackhole')"
+							class="bg-slate-900/80 rounded-2xl p-4 border border-white/5 flex items-center gap-4 cursor-pointer hover:border-violet-500/30 transition duration-300"
+						>
+							<div
+								class="w-16 h-16 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0"
+							>
+								<i
+									class="fa-solid fa-circle text-black text-2xl shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+								></i>
+							</div>
+							<div class="flex-1 min-w-0">
+								<h3 class="font-bold text-sm text-white">黑洞奥秘 (Black Holes)</h3>
+								<p class="text-[11px] text-zinc-400 mt-1 truncate">
+									引力强大到连光都无法逃脱的超高密度星体...
+								</p>
+								<span
+									class="inline-block bg-violet-500/15 text-violet-400 text-[9px] px-1.5 py-0.5 rounded mt-2"
+									>深空物理</span
+								>
+							</div>
+							<i class="fa-solid fa-chevron-right text-zinc-600"></i>
+						</div>
+
+						<!-- 卡片 星云 -->
+						<div
+							onclick="openPlanetDetail('nebula')"
+							class="bg-slate-900/80 rounded-2xl p-4 border border-white/5 flex items-center gap-4 cursor-pointer hover:border-teal-500/30 transition duration-300"
+						>
+							<div
+								class="w-16 h-16 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0"
+							>
+								<i class="fa-solid fa-wind text-teal-400 text-2xl animate-pulse"></i>
+							</div>
+							<div class="flex-1 min-w-0">
+								<h3 class="font-bold text-sm text-white">星云孕育场 (Nebulae)</h3>
+								<p class="text-[11px] text-zinc-400 mt-1 truncate">
+									由尘埃和气体组成的巨大云雾，是恒星的摇篮...
+								</p>
+								<span
+									class="inline-block bg-teal-500/15 text-teal-400 text-[9px] px-1.5 py-0.5 rounded mt-2"
+									>星系演化</span
+								>
+							</div>
+							<i class="fa-solid fa-chevron-right text-zinc-600"></i>
+						</div>
+					</div>
+
+					<!-- 交互组件：科普问答卡片 -->
+					<div class="p-5">
+						<div
+							class="bg-gradient-to-tr from-cyan-950/50 to-slate-900/90 rounded-2xl p-5 border border-cyan-500/10"
+						>
+							<span
+								class="bg-cyan-500/10 text-cyan-400 text-[9px] font-bold px-2 py-0.5 rounded border border-cyan-500/20 uppercase tracking-widest"
+							>
+								知识大挑战
+							</span>
+							<h3 class="text-sm font-bold text-white mt-2.5">太阳发出的光到达地球大约需要多少时间？</h3>
+							<div class="mt-4 space-y-2">
+								<button
+									onclick="checkAnswer(this, false)"
+									class="w-full text-left bg-slate-800/50 hover:bg-slate-800 text-xs text-zinc-300 p-3 rounded-xl border border-white/5 transition active:scale-98"
+								>
+									A. 3分钟左右
+								</button>
+								<button
+									onclick="checkAnswer(this, true)"
+									class="w-full text-left bg-slate-800/50 hover:bg-slate-800 text-xs text-zinc-300 p-3 rounded-xl border border-white/5 transition active:scale-98"
+								>
+									B. 8分钟左右（正确答案：约8分20秒）
+								</button>
+								<button
+									onclick="checkAnswer(this, false)"
+									class="w-full text-left bg-slate-800/50 hover:bg-slate-800 text-xs text-zinc-300 p-3 rounded-xl border border-white/5 transition active:scale-98"
+								>
+									C. 一小时左右
+								</button>
+							</div>
+							<p
+								id="answerFeedback"
+								class="hidden text-xs font-semibold mt-3 text-emerald-400 text-center"
+							></p>
+						</div>
+					</div>
+				</section>
+
+				<!-- 页面三：游戏页 (Game Page) -->
+				<section id="pageGame" class="absolute inset-0 flex flex-col overflow-hidden z-10 hidden">
+					<!-- 顶部游戏信息区 -->
+					<div
+						class="px-5 py-3 bg-slate-950 border-b border-white/5 flex items-center justify-between shrink-0 z-10"
+					>
+						<div class="flex items-center space-x-4">
+							<div class="text-xs">
+								<span class="text-zinc-500">分数:</span>
+								<span id="gameScore" class="font-mono font-bold text-base text-cyan-400 ml-1">0</span>
+							</div>
+							<div class="text-xs">
+								<span class="text-zinc-500">生命:</span>
+								<span id="gameLives" class="text-rose-500 ml-1 tracking-wider">❤️❤️❤️</span>
+							</div>
+						</div>
+						<button
+							id="gameControlBtn"
+							onclick="toggleGame()"
+							class="bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-cyan-950"
+						>
+							<i class="fa-solid fa-play"></i> <span>开始游戏</span>
+						</button>
+					</div>
+
+					<!-- 游戏 Canvas 渲染主容器 -->
+					<div class="flex-1 relative overflow-hidden bg-slate-900">
+						<canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+						<!-- 玩法悬浮提示罩 (游戏未开始时显示) -->
+						<div
+							id="gameGuideOverlay"
+							class="absolute inset-0 bg-black/80 flex flex-col justify-center items-center p-6 text-center z-10"
+						>
+							<div
+								class="w-16 h-16 bg-pink-500/10 rounded-full flex items-center justify-center text-pink-400 text-2xl mb-4 animate-pulse"
+							>
+								<i class="fa-solid fa-gamepad"></i>
+							</div>
+							<h3 class="text-base font-bold text-white mb-2">拦截小行星 (UFO Interceptor)</h3>
+							<p class="text-xs text-zinc-400 max-w-[80%] leading-relaxed mb-6">
+								驾驶下方绿色UFO防御不断坠落的陨石。在屏幕上**按住左右拖拽**即可操控方向，UFO将自动开火！
+							</p>
+							<div
+								class="flex items-center space-x-1.5 text-[10px] text-zinc-500 bg-white/5 px-3 py-1.5 rounded-full border border-white/5"
+							>
+								<i class="fa-solid fa-fingerprint animate-pulse text-cyan-400"></i>
+								<span>滑动或拖拽操控，消灭红色陨石</span>
+							</div>
+						</div>
+
+						<!-- 游戏失败弹层 -->
+						<div
+							id="gameOverOverlay"
+							class="absolute inset-0 bg-black/90 flex flex-col justify-center items-center p-6 text-center z-10 hidden"
+						>
+							<div
+								class="w-16 h-16 bg-rose-500/15 rounded-full flex items-center justify-center text-rose-500 text-3xl mb-4"
+							>
+								<i class="fa-solid fa-skull-crossbones"></i>
+							</div>
+							<h3 class="text-xl font-bold text-white mb-1">飞船已被陨石摧毁</h3>
+							<p class="text-xs text-zinc-500 mb-6">太空港已与您断开链接...</p>
+
+							<div class="bg-white/5 p-4 rounded-2xl border border-white/5 w-48 mb-6">
+								<p class="text-xs text-zinc-400">本次拦截得分</p>
+								<p
+									id="finalScore"
+									class="text-3xl font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-500 mt-1"
+								>
+									0
+								</p>
+							</div>
+
+							<button
+								onclick="restartGame()"
+								class="bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-sm font-bold py-3 px-8 rounded-xl transition duration-200 hover:opacity-90 active:scale-95 shadow-lg shadow-cyan-900/30"
+							>
+								重新起飞
+							</button>
+						</div>
+					</div>
+				</section>
+			</main>
+
+			<!-- =================== 小程序底部导航栏 (Tab Bar) =================== -->
+			<footer
+				class="h-16 shrink-0 bg-slate-950 border-t border-white/5 flex items-center justify-around text-[10px] text-zinc-500 select-none z-40"
+			>
+				<!-- 首页 Tab -->
+				<button
+					onclick="switchTab('home')"
+					id="tabHome"
+					class="flex flex-col items-center justify-center flex-1 h-full py-2 space-y-1 text-cyan-400"
+				>
+					<i class="fa-solid fa-rocket text-lg"></i>
+					<span class="font-medium">星空首页</span>
+				</button>
+
+				<!-- 科普 Tab -->
+				<button
+					onclick="switchTab('info')"
+					id="tabInfo"
+					class="flex flex-col items-center justify-center flex-1 h-full py-2 space-y-1 hover:text-white transition"
+				>
+					<i class="fa-solid fa-circle-nodes text-lg"></i>
+					<span class="font-medium">宇宙探索</span>
+				</button>
+
+				<!-- 游戏 Tab -->
+				<button
+					onclick="switchTab('game')"
+					id="tabGame"
+					class="flex flex-col items-center justify-center flex-1 h-full py-2 space-y-1 hover:text-white transition"
+				>
+					<i class="fa-solid fa-gamepad text-lg"></i>
+					<span class="font-medium">拦截游戏</span>
+				</button>
+			</footer>
+
+			<!-- =================== 全局交互模态框 =================== -->
+			<!-- 科普卡片详情弹框 -->
+			<div
+				id="planetDetailModal"
+				class="absolute inset-0 z-50 bg-black/85 flex items-end justify-center transition-opacity duration-300 opacity-0 pointer-events-none"
+			>
+				<div
+					id="planetModalBody"
+					class="w-full bg-slate-900 rounded-t-[2.5rem] border-t border-white/10 p-6 flex flex-col max-h-[80%] overflow-y-auto no-scrollbar translate-y-full transition-transform duration-300"
+				>
+					<!-- 拖动滑块模拟 -->
+					<div class="w-12 h-1 bg-zinc-700 rounded-full mx-auto mb-6 shrink-0"></div>
+
+					<div class="flex items-center gap-4 mb-4">
+						<div
+							id="modalPlanetIcon"
+							class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl"
+						></div>
+						<div>
+							<h3 id="modalPlanetTitle" class="text-lg font-bold text-white"></h3>
+							<span
+								id="modalPlanetBadge"
+								class="inline-block text-[10px] px-2 py-0.5 rounded mt-1"
+							></span>
+						</div>
+					</div>
+
+					<div class="space-y-4 text-xs text-zinc-300 leading-relaxed py-2">
+						<p id="modalPlanetDesc" class="border-b border-white/5 pb-4"></p>
+						<div>
+							<h4 class="font-semibold text-white mb-1.5 flex items-center gap-1">
+								<i class="fa-solid fa-lightbulb text-yellow-400"></i> 你知道吗？
+							</h4>
+							<p
+								id="modalPlanetFact"
+								class="bg-white/5 p-3 rounded-xl border border-white/5 italic text-zinc-400"
+							></p>
+						</div>
+					</div>
+
+					<button
+						onclick="closePlanetDetail()"
+						class="mt-6 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold py-3.5 rounded-2xl transition active:scale-95"
+					>
+						返回大英百科
+					</button>
+				</div>
+			</div>
+
+			<!-- 趣味探索互动小弹窗 -->
+			<div
+				id="interactiveModal"
+				class="absolute inset-0 z-50 bg-black/80 flex items-center justify-center px-6 transition-opacity duration-300 opacity-0 pointer-events-none"
+			>
+				<div
+					class="w-full bg-slate-900 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center"
+				>
+					<div
+						class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 text-xl mb-4"
+					>
+						<i class="fa-solid fa-atom"></i>
+					</div>
+					<h3 class="font-bold text-white text-sm mb-2">恒星数量大揭秘</h3>
+					<p class="text-xs text-zinc-400 leading-relaxed mb-6">
+						银河系中约有
+						1000亿到4000亿颗恒星。假设你每一秒钟数出一颗恒星，即使在不睡觉不休息的情况下，数完它们也需要花费大约
+						**3000年** 的时间！
+					</p>
+					<button
+						onclick="closeInteractiveModal()"
+						class="w-full bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold py-3 rounded-xl transition active:scale-95"
+					>
+						太震撼了！
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- 原型基础逻辑实现 -->
+		<script>
+			// 手机虚拟时间更新
+			const updateTime = () => {
+				const timeEl = document.getElementById('phoneTime');
+				const now = new Date();
+				const hrs = String(now.getHours()).padStart(2, '0');
+				const mins = String(now.getMinutes()).padStart(2, '0');
+				if (timeEl) timeEl.textContent = `${hrs}:${mins}`;
+			};
+			setInterval(updateTime, 1000);
+			updateTime();
+
+			// 模拟加载场景逻辑 (从 0% 加载至 100%)
+			const runLoadingScreen = () => {
+				const progress = document.getElementById('progressBar');
+				const percentText = document.getElementById('loadingPercent');
+				const tips = [
+					'正在加载星际引擎...',
+					'连接太空港口信息...',
+					'装载UFO导弹系统...',
+					'渲染银河系星系图...',
+					'正在降落在主甲板...'
+				];
+				const tipText = document.getElementById('loadingTip');
+
+				let count = 0;
+				const timer = setInterval(() => {
+					count += Math.floor(Math.random() * 8) + 2;
+					if (count >= 100) {
+						count = 100;
+						clearInterval(timer);
+						setTimeout(() => {
+							const loading = document.getElementById('loadingScreen');
+							loading.style.opacity = '0';
+							setTimeout(() => (loading.style.display = 'none'), 700);
+						}, 400);
+					}
+					progress.style.width = `${count}%`;
+					percentText.textContent = `${count}%`;
+
+					// 动态更新提示语
+					if (count % 20 === 0 && count < 100) {
+						tipText.textContent = tips[Math.floor(count / 20) % tips.length];
+					}
+				}, 60);
+			};
+
+			// 首页天文名言生成器
+			const quotes = [
+				{
+					text: '星空最美妙的地方，在于所有的尘埃最终都会重新组合，诞生出无限奇迹。',
+					author: '— 卡尔·萨根《宇宙》'
+				},
+				{
+					text: '我们也是尘埃的一部分。当仰望星空时，你实际上是宇宙在审视自身。',
+					author: '— 艾伦·沃茨《感知世界》'
+				},
+				{ text: '探索宇宙是人类写给未知的一封不寄回信的情书。', author: '— 《深空漫游》编导' },
+				{
+					text: '在这个微小的淡蓝色圆点上，有你爱的每一个人，你听说过的每一个人，曾经存在过的每一个人。',
+					author: '— 卡尔·萨根'
+				}
+			];
+			const generateQuote = () => {
+				const index = Math.floor(Math.random() * quotes.length);
+				document.getElementById('spaceQuote').textContent = `"${quotes[index].text}"`;
+				document.getElementById('quoteAuthor').textContent = quotes[index].author;
+			};
+
+			// 科普卡片数据结构
+			const planetData = {
+				solar: {
+					title: '太阳系家族 (Solar System)',
+					badge: '基础天文百科',
+					badgeClass: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+					iconClass: 'bg-orange-500/10 text-orange-400 border border-orange-500/20',
+					icon: "<i class='fa-solid fa-sun'></i>",
+					desc: '太阳系是以太阳为中心，以及所有受到太阳引力约束的天体集合。其中包括八大行星（水星、金星、地球、火星、木星、土星、天王星、海王星），至少173颗已知的天然卫星，5颗已经辨认出来的矮行星和数以亿计的太阳系小天体。太阳占据了整个太阳系99.86%的质量，其庞大的热核聚变反应为地球提供了万物生长的光和热。',
+					fact: '太阳系中最大的行星是木星，它的质量比太阳系中所有其他行星的质量总和还要大2.5倍！木星著名的“大红斑”其实是一个比地球还要巨大的超强超级风暴。'
+				},
+				blackhole: {
+					title: '黑洞奥秘 (Black Holes)',
+					badge: '量子与宏观引力物理',
+					badgeClass: 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
+					iconClass: 'bg-violet-500/10 border border-violet-500/20',
+					icon: "<i class='fa-solid fa-circle text-black shadow-[0_0_10px_rgba(139,92,246,0.6)]'></i>",
+					desc: '黑洞是宇宙中引力极度强大的一种天体。根据爱因斯坦的广义相对论，当一颗足够大质量的恒星在生命终点发生引力坍塌时，就会压缩成一个密度无限大的“奇点”。在黑洞周围存在着一个名为“事件视界”的无形边界，任何物质，包括光在内，一旦越过这个边界，其逃逸速度将超越光速，因而绝无逃脱的可能。',
+					fact: '2019年人类成功拍下了有史以来第一张黑洞照片（M87星系中心的超大质量黑洞）。如果你不小心掉入黑洞，在事件视界边缘，你会经历一种被称为“面条化”的极端引力拉伸过程。'
+				},
+				nebula: {
+					title: '星云孕育场 (Nebulae)',
+					badge: '星际演化阶段',
+					badgeClass: 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
+					iconClass: 'bg-teal-500/10 text-teal-400 border border-teal-500/20',
+					icon: "<i class='fa-solid fa-wind'></i>",
+					desc: '星云是宇宙空间中由尘埃、氢气、氦气和其他电离气体组成的巨大云雾。它们可以是数光年甚至数百光年宽。星云在恒星的整个生命周期中扮演着重要角色：一些星云是新生恒星诞生的场所（即“恒星孕育场”），在引力作用下，尘埃和气体会凝聚结合形成原恒星；另一些星云则是恒星死亡时喷射出的残骸，如超新星遗迹。',
+					fact: '哈勃望远镜拍摄的最著名天文照片之一“创生之柱”，实际上就是位于鹰状星云内的一处恒星孕育区，那些高耸的气体柱内正在孕育着全新的恒星。'
+				}
+			};
+
+			// 交互细节：打开科普面板
+			const openPlanetDetail = (key) => {
+				const data = planetData[key];
+				if (!data) return;
+
+				document.getElementById('modalPlanetTitle').textContent = data.title;
+				const badgeEl = document.getElementById('modalPlanetBadge');
+				badgeEl.className = `inline-block text-[10px] px-2 py-0.5 rounded mt-1 ${data.badgeClass}`;
+				badgeEl.textContent = data.badge;
+
+				const iconEl = document.getElementById('modalPlanetIcon');
+				iconEl.className = `w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 ${data.iconClass}`;
+				iconEl.innerHTML = data.icon;
+
+				document.getElementById('modalPlanetDesc').textContent = data.desc;
+				document.getElementById('modalPlanetFact').textContent = data.fact;
+
+				const modal = document.getElementById('planetDetailModal');
+				const body = document.getElementById('planetModalBody');
+
+				modal.classList.remove('pointer-events-none');
+				modal.style.opacity = '1';
+				body.classList.remove('translate-y-full');
+			};
+
+			const closePlanetDetail = () => {
+				const modal = document.getElementById('planetDetailModal');
+				const body = document.getElementById('planetModalBody');
+
+				body.classList.add('translate-y-full');
+				modal.style.opacity = '0';
+				setTimeout(() => modal.classList.add('pointer-events-none'), 300);
+			};
+
+			// 趣味科普问答交互
+			const checkAnswer = (btn, isCorrect) => {
+				const feedback = document.getElementById('answerFeedback');
+				feedback.classList.remove('hidden');
+
+				// 禁用当前卡片内所有选项按钮
+				const siblingButtons = btn.parentNode.querySelectorAll('button');
+				siblingButtons.forEach((b) => (b.disabled = true));
+
+				if (isCorrect) {
+					btn.className =
+						'w-full text-left bg-emerald-500/10 border-emerald-500/30 text-xs text-emerald-400 p-3 rounded-xl border transition';
+					feedback.textContent = '🎉 回答正确！地球到太阳平均距离约1.5亿千米，光速传播耗时约8分钟20秒。';
+					feedback.className = 'text-xs font-semibold mt-3 text-emerald-400 text-center animate-bounce';
+				} else {
+					btn.className =
+						'w-full text-left bg-rose-500/10 border-rose-500/30 text-xs text-rose-400 p-3 rounded-xl border transition';
+					feedback.textContent = '❌ 答错啦，正确答案是：B. 8分钟左右。';
+					feedback.className = 'text-xs font-semibold mt-3 text-rose-400 text-center';
+				}
+			};
+
+			// 其它小弹窗控制
+			const openInteractiveModal = () => {
+				const modal = document.getElementById('interactiveModal');
+				modal.classList.remove('pointer-events-none');
+				modal.style.opacity = '1';
+			};
+
+			const closeInteractiveModal = () => {
+				const modal = document.getElementById('interactiveModal');
+				modal.style.opacity = '0';
+				setTimeout(() => modal.classList.add('pointer-events-none'), 300);
+			};
+
+			// 重置Demo，退回加载画面
+			const resetDemo = () => {
+				// 先停止可能正在玩的游戏
+				if (isGamePlaying) {
+					toggleGame();
+				}
+				const loading = document.getElementById('loadingScreen');
+				document.getElementById('progressBar').style.width = '0%';
+				document.getElementById('loadingPercent').textContent = '0%';
+				loading.style.display = 'flex';
+				loading.style.opacity = '1';
+				runLoadingScreen();
+			};
+
+			// 页面 Tab 导航控制
+			const pages = {
+				home: { section: 'pageHome', tab: 'tabHome', title: '星际漫游者' },
+				info: { section: 'pageInfo', tab: 'tabInfo', title: '宇宙微百科' },
+				game: { section: 'pageGame', tab: 'tabGame', title: '星际拦截大作战' }
+			};
+
+			const switchTab = (activeKey) => {
+				Object.keys(pages).forEach((key) => {
+					const config = pages[key];
+					const sectionEl = document.getElementById(config.section);
+					const tabEl = document.getElementById(config.tab);
+
+					if (key === activeKey) {
+						sectionEl.classList.remove('hidden');
+						tabEl.classList.add('text-cyan-400');
+						tabEl.classList.remove('text-zinc-500', 'hover:text-white');
+						document.getElementById('navTitle').textContent = config.title;
+
+						// 进入游戏页面自适应尺寸
+						if (key === 'game') {
+							initGameCanvas();
+						} else if (isGamePlaying) {
+							// 如果切离游戏页，自动暂停游戏
+							toggleGame();
+						}
+					} else {
+						sectionEl.classList.add('hidden');
+						tabEl.classList.remove('text-cyan-400');
+						tabEl.classList.add('text-zinc-500', 'hover:text-white');
+					}
+				});
+			};
+		</script>
+
+		<!-- 流星雨 Canvas 渲染系统 -->
+		<script>
+			const canvas = document.getElementById('meteorCanvas');
+			const ctx = canvas.getContext('2d');
+			let meteors = [];
+			let backgroundStars = [];
+
+			const resizeLoadingCanvas = () => {
+				canvas.width = canvas.offsetWidth;
+				canvas.height = canvas.offsetHeight;
+			};
+
+			class BackgroundStar {
+				constructor() {
+					this.x = Math.random() * canvas.width;
+					this.y = Math.random() * canvas.height;
+					this.size = Math.random() * 1.5;
+					this.alpha = Math.random();
+					this.speed = Math.random() * 0.02 + 0.005;
+				}
+				draw() {
+					this.alpha += this.speed;
+					if (this.alpha > 1 || this.alpha < 0) this.speed = -this.speed;
+					ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, this.alpha)})`;
+					ctx.fillRect(this.x, this.y, this.size, this.size);
+				}
+			}
+
+			class Meteor {
+				constructor() {
+					this.reset();
+					this.y = Math.random() * canvas.height; // 初次随机分散
+				}
+				reset() {
+					this.x = Math.random() * canvas.width * 1.5;
+					this.y = -50;
+					this.length = Math.random() * 60 + 40;
+					this.speed = Math.random() * 8 + 6;
+					this.thickness = Math.random() * 1.5 + 0.5;
+				}
+				update() {
+					this.x -= this.speed * 0.8;
+					this.y += this.speed;
+					if (this.y > canvas.height + 100 || this.x < -100) {
+						this.reset();
+					}
+				}
+				draw() {
+					ctx.beginPath();
+					const gradient = ctx.createLinearGradient(
+						this.x,
+						this.y,
+						this.x + this.length * 0.8,
+						this.y - this.length
+					);
+					gradient.addColorStop(0, 'rgba(34, 211, 238, 0.9)'); // Cyan-400
+					gradient.addColorStop(0.3, 'rgba(139, 92, 246, 0.4)'); // Violet-500
+					gradient.addColorStop(1, 'rgba(0,0,0,0)');
+					ctx.strokeStyle = gradient;
+					ctx.lineWidth = this.thickness;
+					ctx.moveTo(this.x, this.y);
+					ctx.lineTo(this.x + this.length * 0.8, this.y - this.length);
+					ctx.stroke();
+				}
+			}
+
+			const animateLoading = () => {
+				ctx.fillStyle = 'rgba(2, 2, 10, 0.25)';
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+				backgroundStars.forEach((star) => star.draw());
+				meteors.forEach((meteor) => {
+					meteor.update();
+					meteor.draw();
+				});
+
+				requestAnimationFrame(animateLoading);
+			};
+
+			// 开启加载动画流程
+			window.addEventListener('load', () => {
+				resizeLoadingCanvas();
+				// 初始化星空和流星
+				for (let i = 0; i < 40; i++) backgroundStars.push(new BackgroundStar());
+				for (let i = 0; i < 5; i++) meteors.push(new Meteor());
+
+				animateLoading();
+				runLoadingScreen();
+			});
+
+			window.addEventListener('resize', resizeLoadingCanvas);
+		</script>
+
+		<!-- 2D Canvas 「UFO打陨石」游戏逻辑系统 -->
+		<!-- <script>
+			const gameCanvas = document.getElementById('gameCanvas');
+			const gctx = gameCanvas.getContext('2d');
+
+			let isGamePlaying = false;
+			let animationId = null;
+
+			// 核心游戏组件数据
+			let player = { x: 150, y: 0, w: 45, h: 25, targetX: 150 };
+			let bullets = [];
+			let asteroids = [];
+			let particles = [];
+			let score = 0;
+			let lives = 3;
+
+			let spawnTimer = 0;
+			let shootTimer = 0;
+
+			// 画布大小适配逻辑
+			const initGameCanvas = () => {
+				const container = gameCanvas.parentElement;
+				gameCanvas.width = container.offsetWidth;
+				gameCanvas.height = container.offsetHeight;
+
+				// 初始化玩家定位 (底部留出安全区)
+				player.x = gameCanvas.width / 2;
+				player.targetX = player.x;
+				player.y = gameCanvas.height - 65;
+			};
+
+			// 微信小程序风格的手指滑动触控事件 (Touch drag control)
+			let isDragging = false;
+
+			const handleTouchStart = (e) => {
+				if (!isGamePlaying) return;
+				isDragging = true;
+				updateTargetPosition(e);
+			};
+
+			const handleTouchMove = (e) => {
+				if (!isGamePlaying || !isDragging) return;
+				updateTargetPosition(e);
+			};
+
+			const handleTouchEnd = () => {
+				isDragging = false;
+			};
+
+			const updateTargetPosition = (e) => {
+				const rect = gameCanvas.getBoundingClientRect();
+				// 完美支持桌面端Mouse模拟与移动端Touch
+				const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+				const relativeX = clientX - rect.left;
+				player.targetX = Math.max(player.w / 2, Math.min(gameCanvas.width - player.w / 2, relativeX));
+			};
+
+			// 注册键鼠/触屏事件
+			gameCanvas.addEventListener('mousedown', handleTouchStart);
+			gameCanvas.addEventListener('mousemove', handleTouchMove);
+			window.addEventListener('mouseup', handleTouchEnd);
+
+			gameCanvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+			gameCanvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+			gameCanvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+			// 游戏爆炸效果粒子
+			class Particle {
+				constructor(x, y, color) {
+					this.x = x;
+					this.y = y;
+					this.color = color;
+					this.size = Math.random() * 3 + 1;
+					this.speedX = (Math.random() - 0.5) * 6;
+					this.speedY = (Math.random() - 0.5) * 6;
+					this.alpha = 1;
+					this.decay = Math.random() * 0.03 + 0.015;
+				}
+				update() {
+					this.x += this.speedX;
+					this.y += this.speedY;
+					this.alpha -= this.decay;
+				}
+				draw() {
+					gctx.save();
+					gctx.globalAlpha = Math.max(0, this.alpha);
+					gctx.fillStyle = this.color;
+					gctx.beginPath();
+					gctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+					gctx.fill();
+					gctx.restore();
+				}
+			}
+
+			// 开启/暂停游戏控制
+			const toggleGame = () => {
+				const btn = document.getElementById('gameControlBtn');
+				const overlay = document.getElementById('gameGuideOverlay');
+
+				if (!isGamePlaying) {
+					// 开启游戏
+					isGamePlaying = true;
+					btn.className =
+						'bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95';
+					btn.innerHTML = `<i class="fa-solid fa-pause"></i> <span>暂停</span>`;
+					overlay.classList.add('hidden');
+
+					// 重置基础变量并重新启动循环
+					shootTimer = 0;
+					spawnTimer = 0;
+					gameLoop();
+				} else {
+					// 暂停游戏
+					isGamePlaying = false;
+					btn.className =
+						'bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-cyan-950';
+					btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>继续</span>`;
+					cancelAnimationFrame(animationId);
+				}
+			};
+
+			const restartGame = () => {
+				// 清理上一轮数据
+				bullets = [];
+				asteroids = [];
+				particles = [];
+				score = 0;
+				lives = 3;
+				player.targetX = gameCanvas.width / 2;
+				player.x = player.targetX;
+
+				document.getElementById('gameScore').textContent = '0';
+				document.getElementById('gameLives').textContent = '❤️❤️❤️';
+				document.getElementById('gameOverOverlay').classList.add('hidden');
+
+				isGamePlaying = false;
+				toggleGame();
+			};
+
+			// 核心游戏逻辑循环 (Game Loop)
+			const gameLoop = () => {
+				if (!isGamePlaying) return;
+
+				// 清理画布
+				gctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+				// 1. 缓慢平滑更新玩家飞船 (UFO) 位置
+				player.x += (player.targetX - player.x) * 0.25;
+
+				// 绘制玩家 UFO (高保真矢量渲染)
+				gctx.save();
+				// 绘制外星半圆座舱
+				gctx.beginPath();
+				gctx.arc(player.x, player.y - 2, 10, Math.PI, 0);
+				gctx.fillStyle = 'rgba(34, 211, 238, 0.65)'; // 浅蓝透明发光
+				gctx.fill();
+				gctx.strokeStyle = '#22d3ee';
+				gctx.lineWidth = 1;
+				gctx.stroke();
+
+				// 绘制金属底座碟身
+				gctx.beginPath();
+				gctx.ellipse(player.x, player.y + 4, player.w / 2, player.h / 3.5, 0, 0, Math.PI * 2);
+				gctx.fillStyle = '#1e293b'; // 深灰金属色
+				gctx.fill();
+				gctx.strokeStyle = '#64748b';
+				gctx.lineWidth = 1.5;
+				gctx.stroke();
+
+				// 绘制碟盘中心绿色信号灯 (外星科技)
+				gctx.beginPath();
+				gctx.arc(player.x, player.y + 4, 3, 0, Math.PI * 2);
+				gctx.fillStyle = '#10b981'; // 纯粹绿
+				gctx.fill();
+				gctx.shadowBlur = 8;
+				gctx.shadowColor = '#10b981';
+				gctx.fill();
+				gctx.restore();
+
+				// 2. 自动武器开火控制
+				shootTimer++;
+				if (shootTimer >= 18) {
+					// 降低攻击频率
+					bullets.push({
+						x: player.x,
+						y: player.y - 8,
+						speedY: -7,
+						r: 2.5
+					});
+					shootTimer = 0;
+				}
+
+				// 3. 更新并渲染激光子弹
+				for (let i = bullets.length - 1; i >= 0; i--) {
+					const b = bullets[i];
+					b.y += b.speedY;
+
+					// 绘制激光
+					gctx.save();
+					gctx.beginPath();
+					gctx.fillStyle = '#22d3ee'; // 青色子弹
+					gctx.shadowBlur = 6;
+					gctx.shadowColor = '#22d3ee';
+					gctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+					gctx.fill();
+					gctx.restore();
+
+					// 越界清理
+					if (b.y < -10) {
+						bullets.splice(i, 1);
+					}
+				}
+
+				// 4. 小行星生成逻辑 (随着分数越高，生成间隔越短)
+				spawnTimer++;
+				const maxSpawnTime = Math.max(45, 90 - Math.floor(score / 5) * 5); // 动态增加硬核难度
+				if (spawnTimer >= maxSpawnTime) {
+					const radius = Math.random() * 15 + 10;
+					asteroids.push({
+						x: Math.random() * (gameCanvas.width - radius * 2) + radius,
+						y: -radius,
+						r: radius,
+						speedY: Math.random() * 1.5 + 1.2,
+						speedX: (Math.random() - 0.5) * 0.6,
+						rotation: 0,
+						rotationSpeed: (Math.random() - 0.5) * 0.04
+					});
+					spawnTimer = 0;
+				}
+
+				// 5. 更新并渲染陨石 (小行星)
+				for (let i = asteroids.length - 1; i >= 0; i--) {
+					const a = asteroids[i];
+					a.y += a.speedY;
+					a.x += a.speedX;
+					a.rotation += a.rotationSpeed;
+
+					// 超出屏幕下边缘判定扣除生命值
+					if (a.y > gameCanvas.height + a.r) {
+						asteroids.splice(i, 1);
+						loseLife();
+						continue;
+					}
+
+					// 绘制带旋转细节的小行星
+					gctx.save();
+					gctx.translate(a.x, a.y);
+					gctx.rotate(a.rotation);
+
+					gctx.beginPath();
+					gctx.arc(0, 0, a.r, 0, Math.PI * 2);
+					gctx.fillStyle = '#475569'; // 岩石深灰
+					gctx.fill();
+					gctx.strokeStyle = '#f43f5e'; // 警告红色边缘
+					gctx.lineWidth = 1;
+					gctx.stroke();
+
+					// 绘制岩石表面的陨石坑洞
+					gctx.beginPath();
+					gctx.arc(-a.r / 2.5, -a.r / 4, a.r / 4, 0, Math.PI * 2);
+					gctx.fillStyle = '#334155';
+					gctx.fill();
+
+					gctx.beginPath();
+					gctx.arc(a.r / 4, a.r / 3, a.r / 5, 0, Math.PI * 2);
+					gctx.fillStyle = '#334155';
+					gctx.fill();
+
+					gctx.restore();
+
+					// 6. 碰撞检验 1：子弹 VS 陨石
+					for (let j = bullets.length - 1; j >= 0; j--) {
+						const b = bullets[j];
+						const dist = Math.hypot(b.x - a.x, b.y - a.y);
+						if (dist < a.r + b.r) {
+							// 碰撞触发！销毁子弹和陨石
+							createExplosion(a.x, a.y, '#f43f5e', a.r);
+							asteroids.splice(i, 1);
+							bullets.splice(j, 1);
+
+							// 加分
+							score += 1;
+							document.getElementById('gameScore').textContent = score;
+							break;
+						}
+					}
+
+					// 7. 碰撞检验 2：陨石 VS UFO 玩家
+					if (asteroids[i]) {
+						// 如果陨石刚才未被击碎
+						const distToPlayer = Math.hypot(player.x - a.x, player.y - a.y);
+						if (distToPlayer < a.r + player.w / 2.5) {
+							// UFO 被直接砸中，产生大爆炸
+							createExplosion(a.x, a.y, '#f59e0b', a.r * 1.5);
+							asteroids.splice(i, 1);
+							loseLife();
+						}
+					}
+				}
+
+				// 8. 粒子状态更新渲染
+				for (let i = particles.length - 1; i >= 0; i--) {
+					const p = particles[i];
+					p.update();
+					p.draw();
+					if (p.alpha <= 0) {
+						particles.splice(i, 1);
+					}
+				}
+
+				// 循环推进
+				animationId = requestAnimationFrame(gameLoop);
+			};
+
+			// 制造爆破粒子
+			const createExplosion = (x, y, color, radius) => {
+				const count = Math.floor(radius * 1.2);
+				for (let i = 0; i < count; i++) {
+					particles.push(new Particle(x, y, color));
+				}
+			};
+
+			// 失去生命值逻辑
+			const loseLife = () => {
+				lives--;
+				const heartIcons = ['💔💔💔', '❤️💔💔', '❤️❤️💔', '❤️❤️❤️'];
+				document.getElementById('gameLives').textContent = heartIcons[Math.max(0, lives)];
+
+				// 手机闪红颤抖效果
+				const mainContainer = gameCanvas.parentElement;
+				mainContainer.classList.add('ring-2', 'ring-rose-600/50');
+				setTimeout(() => {
+					mainContainer.classList.remove('ring-2', 'ring-rose-600/50');
+				}, 200);
+
+				if (lives <= 0) {
+					gameOver();
+				}
+			};
+
+			// 游戏失败
+			const gameOver = () => {
+				isGamePlaying = false;
+				cancelAnimationFrame(animationId);
+				document.getElementById('finalScore').textContent = score;
+				document.getElementById('gameOverOverlay').classList.remove('hidden');
+
+				// 还原头部暂停按钮样式
+				const btn = document.getElementById('gameControlBtn');
+				btn.className =
+					'bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-cyan-950';
+				btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>开始游戏</span>`;
+			};
+		</script> -->
+		<script>
+			const gameCanvas = document.getElementById('gameCanvas');
+			let renderer, scene, camera;
+
+			let isGamePlaying = false;
+			let animationId = null;
+
+			// 核心游戏组件数据
+			let playerGroup; // Three.js 玩家复合组
+			let bullets = [];
+			let asteroids = [];
+			let particles = [];
+			let score = 0;
+			let lives = 3;
+
+			let spawnTimer = 0;
+			let shootTimer = 0;
+			let ufoTargetX = 0; // 3D世界的X目标坐标
+
+			// 画布大小适配与3D场景初始化
+			const initGameCanvas = () => {
+				const container = gameCanvas.parentElement;
+				const width = container.offsetWidth;
+				const height = container.offsetHeight;
+
+				if (!renderer) {
+					// 初始化渲染器
+					renderer = new THREE.WebGLRenderer({ canvas: gameCanvas, antialias: true, alpha: true });
+					renderer.setSize(width, height);
+					renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+					// 初始化场景与星际深空雾化
+					scene = new THREE.Scene();
+					scene.fog = new THREE.FogExp2(0x020617, 0.04);
+
+					// 配置透视相机
+					camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+					camera.position.set(0, 0, 8); // 直视Z轴
+
+					// 添加3D空间光照
+					const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+					scene.add(ambientLight);
+
+					// 侧翼主导光 (青色外星科技感)
+					const dirLight = new THREE.DirectionalLight(0x22d3ee, 1.2);
+					dirLight.position.set(5, 10, 7);
+					scene.add(dirLight);
+
+					// 警告副光源 (警告橙红光斑)
+					const warningLight = new THREE.PointLight(0xf43f5e, 1.5, 15);
+					warningLight.position.set(0, 4, 3);
+					scene.add(warningLight);
+
+					// 构建 3D 复合玩家飞碟
+					playerGroup = new THREE.Group();
+
+					// 1. 半圆透明光能能量舱
+					const domeGeo = new THREE.SphereGeometry(0.35, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+					const domeMat = new THREE.MeshPhongMaterial({
+						color: 0x22d3ee,
+						transparent: true,
+						opacity: 0.7,
+						shininess: 120,
+						wireframe: false
+					});
+					const dome = new THREE.Mesh(domeGeo, domeMat);
+					dome.position.y = 0.08;
+					playerGroup.add(dome);
+
+					// 2. 扁平金属质感碟体
+					const bodyGeo = new THREE.CylinderGeometry(0.7, 0.9, 0.18, 16);
+					const bodyMat = new THREE.MeshStandardMaterial({
+						color: 0x334155,
+						roughness: 0.35,
+						metalness: 0.85
+					});
+					const body = new THREE.Mesh(bodyGeo, bodyMat);
+					body.position.y = -0.1;
+					playerGroup.add(body);
+
+					// 3. 底部发光绿色脉冲灯
+					const emitterGeo = new THREE.SphereGeometry(0.1, 8, 8);
+					const emitterMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+					const emitter = new THREE.Mesh(emitterGeo, emitterMat);
+					emitter.position.set(0, -0.15, 0.7);
+					playerGroup.add(emitter);
+
+					scene.add(playerGroup);
+
+					// 固定UFO底部安全位置
+					playerGroup.position.set(0, -3.2, 0);
+				} else {
+					renderer.setSize(width, height);
+					camera.aspect = width / height;
+					camera.updateProjectionMatrix();
+				}
+			};
+
+			// 触控交互及屏幕坐标到3D投影重映射
+			let isDragging = false;
+
+			const handleTouchStart = (e) => {
+				if (!isGamePlaying) return;
+				isDragging = true;
+				updateTargetPosition(e);
+			};
+
+			const handleTouchMove = (e) => {
+				if (!isGamePlaying || !isDragging) return;
+				updateTargetPosition(e);
+			};
+
+			const handleTouchEnd = () => {
+				isDragging = false;
+			};
+
+			const updateTargetPosition = (e) => {
+				const rect = gameCanvas.getBoundingClientRect();
+				const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+				const relativeX = clientX - rect.left;
+
+				// 将屏幕相对坐标映射到 3D 场景的世界 X 边界 [-3.8, 3.8] 之间
+				const ratio = relativeX / gameCanvas.width;
+				ufoTargetX = (ratio * 2 - 1) * 3.8;
+			};
+
+			// 绑定射击事件
+			gameCanvas.addEventListener('mousedown', handleTouchStart);
+			gameCanvas.addEventListener('mousemove', handleTouchMove);
+			window.addEventListener('mouseup', handleTouchEnd);
+
+			gameCanvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+			gameCanvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+			gameCanvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+			// 实例化 3D 激光弹药
+			const createBullet = () => {
+				const bulletGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6);
+				const bulletMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
+				const bulletMesh = new THREE.Mesh(bulletGeo, bulletMat);
+
+				// 绑定发射原点
+				bulletMesh.position.copy(playerGroup.position);
+				bulletMesh.position.y += 0.45;
+				scene.add(bulletMesh);
+
+				bullets.push({
+					mesh: bulletMesh,
+					speedY: 0.22
+				});
+			};
+
+			// 随机几何扰动，创造凹凸不平的 3D 陨石
+			const spawnAsteroid = () => {
+				const size = Math.random() * 0.35 + 0.3;
+				const asteroidGeo = new THREE.DodecahedronGeometry(size, 1);
+
+				// 扰动顶点属性
+				const posAttr = asteroidGeo.attributes.position;
+				for (let i = 0; i < posAttr.count; i++) {
+					posAttr.setX(i, posAttr.getX(i) + (Math.random() - 0.5) * 0.12);
+					posAttr.setY(i, posAttr.getY(i) + (Math.random() - 0.5) * 0.12);
+					posAttr.setZ(i, posAttr.getZ(i) + (Math.random() - 0.5) * 0.12);
+				}
+				asteroidGeo.computeVertexNormals();
+
+				const asteroidMat = new THREE.MeshStandardMaterial({
+					color: 0x475569,
+					roughness: 0.9,
+					metalness: 0.1,
+					flatShading: true
+				});
+				const asteroidMesh = new THREE.Mesh(asteroidGeo, asteroidMat);
+
+				// 设定顶部随机掉落坐标
+				const spawnX = (Math.random() * 2 - 1) * 3.6;
+				asteroidMesh.position.set(spawnX, 5.0, 0);
+				scene.add(asteroidMesh);
+
+				asteroids.push({
+					mesh: asteroidMesh,
+					r: size,
+					speedY: Math.random() * 0.035 + 0.025,
+					speedX: (Math.random() - 0.5) * 0.012,
+					rotX: (Math.random() - 0.5) * 0.03,
+					rotY: (Math.random() - 0.5) * 0.03
+				});
+			};
+
+			// 渲染 3D 陨石爆炸粒子群
+			const createExplosion = (position, colorHex, size) => {
+				const count = Math.floor(size * 18);
+				const particleGeo = new THREE.SphereGeometry(0.06, 4, 4);
+				const particleMat = new THREE.MeshBasicMaterial({ color: colorHex });
+
+				const localParticles = [];
+
+				for (let i = 0; i < count; i++) {
+					const mesh = new THREE.Mesh(particleGeo, particleMat);
+					mesh.position.copy(position);
+					scene.add(mesh);
+
+					localParticles.push({
+						mesh: mesh,
+						vX: (Math.random() - 0.5) * 0.14,
+						vY: (Math.random() - 0.5) * 0.14,
+						vZ: (Math.random() - 0.5) * 0.14,
+						life: 1.0,
+						decay: Math.random() * 0.03 + 0.015
+					});
+				}
+				particles.push(...localParticles);
+			};
+
+			// 清理 3D 对象
+			const clearGame3DObjects = () => {
+				bullets.forEach((b) => scene.remove(b.mesh));
+				bullets = [];
+				asteroids.forEach((a) => scene.remove(a.mesh));
+				asteroids = [];
+				particles.forEach((p) => scene.remove(p.mesh));
+				particles = [];
+			};
+
+			// 开启/暂停游戏控制
+			const toggleGame = () => {
+				const btn = document.getElementById('gameControlBtn');
+				const overlay = document.getElementById('gameGuideOverlay');
+
+				if (!isGamePlaying) {
+					isGamePlaying = true;
+					btn.className =
+						'bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95';
+					btn.innerHTML = `<i class="fa-solid fa-pause"></i> <span>暂停</span>`;
+					overlay.classList.add('hidden');
+
+					shootTimer = 0;
+					spawnTimer = 0;
+					gameLoop();
+				} else {
+					isGamePlaying = false;
+					btn.className =
+						'bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-cyan-950';
+					btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>继续</span>`;
+					cancelAnimationFrame(animationId);
+				}
+			};
+
+			const restartGame = () => {
+				clearGame3DObjects();
+				score = 0;
+				lives = 3;
+				ufoTargetX = 0;
+				if (playerGroup) {
+					playerGroup.position.x = 0;
+				}
+
+				document.getElementById('gameScore').textContent = '0';
+				document.getElementById('gameLives').textContent = '❤️❤️❤️';
+				document.getElementById('gameOverOverlay').classList.add('hidden');
+
+				isGamePlaying = false;
+				toggleGame();
+			};
+
+			// 核心3D物理及碰撞循环检测
+			const gameLoop = () => {
+				if (!isGamePlaying) return;
+
+				// 1. UFO 玩家飞行器缓动与自倾斜
+				playerGroup.position.x += (ufoTargetX - playerGroup.position.x) * 0.18;
+				playerGroup.rotation.z = -(ufoTargetX - playerGroup.position.x) * 0.35; // 左右飞行侧倾
+				playerGroup.rotation.y += 0.005; // 持续自转
+
+				// 2. 自动武器射击机制
+				shootTimer++;
+				if (shootTimer >= 16) {
+					createBullet();
+					shootTimer = 0;
+				}
+
+				// 3. 激光弹药运动物理
+				for (let i = bullets.length - 1; i >= 0; i--) {
+					const b = bullets[i];
+					b.mesh.position.y += b.speedY;
+
+					// 越界清理
+					if (b.mesh.position.y > 5.5) {
+						scene.remove(b.mesh);
+						bullets.splice(i, 1);
+					}
+				}
+
+				// 4. 3D 陨石生成控制器
+				spawnTimer++;
+				const maxSpawnTime = Math.max(35, 80 - Math.floor(score / 5) * 5);
+				if (spawnTimer >= maxSpawnTime) {
+					spawnAsteroid();
+					spawnTimer = 0;
+				}
+
+				// 5. 3D 陨石更新与全量碰撞检测
+				for (let i = asteroids.length - 1; i >= 0; i--) {
+					const a = asteroids[i];
+					a.mesh.position.y -= a.speedY;
+					a.mesh.position.x += a.speedX;
+					a.mesh.rotation.x += a.rotX;
+					a.mesh.rotation.y += a.rotY;
+
+					// 陨石落入大气层底线，扣血
+					if (a.mesh.position.y < -4.8) {
+						scene.remove(a.mesh);
+						asteroids.splice(i, 1);
+						loseLife();
+						continue;
+					}
+
+					// 碰撞检测：子弹 vs 陨石
+					for (let j = bullets.length - 1; j >= 0; j--) {
+						const b = bullets[j];
+						const dist = a.mesh.position.distanceTo(b.mesh.position);
+						if (dist < a.r + 0.12) {
+							createExplosion(a.mesh.position, 0xf43f5e, a.r);
+							scene.remove(a.mesh);
+							scene.remove(b.mesh);
+							asteroids.splice(i, 1);
+							bullets.splice(j, 1);
+
+							score += 1;
+							document.getElementById('gameScore').textContent = score;
+							break;
+						}
+					}
+
+					// 碰撞检测：飞船 vs 陨石
+					if (asteroids[i]) {
+						const distToPlayer = a.mesh.position.distanceTo(playerGroup.position);
+						if (distToPlayer < a.r + 0.6) {
+							// 玩家飞船体积判定半径
+							createExplosion(a.mesh.position, 0xf59e0b, a.r * 1.6);
+							scene.remove(a.mesh);
+							asteroids.splice(i, 1);
+							loseLife();
+						}
+					}
+				}
+
+				// 6. 3D 爆破碎片消散控制
+				for (let i = particles.length - 1; i >= 0; i--) {
+					const p = particles[i];
+					p.mesh.position.x += p.vX;
+					p.mesh.position.y += p.vY;
+					p.mesh.position.z += p.vZ;
+					p.life -= p.decay;
+					p.mesh.scale.setScalar(p.life);
+
+					if (p.life <= 0) {
+						scene.remove(p.mesh);
+						particles.splice(i, 1);
+					}
+				}
+
+				// 7. 三维视轨物理绘制
+				renderer.render(scene, camera);
+
+				animationId = requestAnimationFrame(gameLoop);
+			};
+
+			// 失去生命值逻辑
+			const loseLife = () => {
+				lives--;
+				const heartIcons = ['💔💔💔', '❤️💔💔', '❤️❤️💔', '❤️❤️❤️'];
+				document.getElementById('gameLives').textContent = heartIcons[Math.max(0, lives)];
+
+				// 振动视觉警示
+				const mainContainer = gameCanvas.parentElement;
+				mainContainer.classList.add('ring-2', 'ring-rose-600/50');
+				setTimeout(() => {
+					mainContainer.classList.remove('ring-2', 'ring-rose-600/50');
+				}, 200);
+
+				if (lives <= 0) {
+					gameOver();
+				}
+			};
+
+			// 游戏失败
+			const gameOver = () => {
+				isGamePlaying = false;
+				cancelAnimationFrame(animationId);
+				document.getElementById('finalScore').textContent = score;
+				document.getElementById('gameOverOverlay').classList.remove('hidden');
+
+				const btn = document.getElementById('gameControlBtn');
+				btn.className =
+					'bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95 shadow-md shadow-cyan-950';
+				btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>开始游戏</span>`;
+			};
+		</script>
+	</body>
+</html>

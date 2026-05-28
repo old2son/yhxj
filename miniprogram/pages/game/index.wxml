@@ -1,0 +1,73 @@
+<view class="page-shell">
+    <space-layer></space-layer>
+
+    <view class="game-head">
+        <view class="game-stats">
+            <view class="stat-block">
+                <text class="stat-label">分数</text>
+                <text class="stat-value">{{score}}</text>
+            </view>
+            <view class="stat-block">
+                <text class="stat-label">生命</text>
+                <text class="stat-life">{{livesText}}</text>
+            </view>
+        </view>
+
+        <view class="control-btn" bindtap="toggleGame">{{controlButtonText}}</view>
+    </view>
+
+    <view
+        id="gameStage"
+        class="game-stage"
+        bindtouchstart="handleTouch"
+        bindtouchmove="handleTouch">
+        <canvas
+            id="gameCanvas"
+            type="2d"
+            class="game-canvas {{guideVisible || gameOverVisible ? 'game-canvas-hidden' : ''}}"></canvas>
+
+        <view wx:if="{{guideVisible && !gameOverVisible}}" class="guide-overlay">
+            <view class="guide-icon">
+                <view class="game-body"></view>
+                <view class="game-pad game-pad-h"></view>
+                <view class="game-pad game-pad-v"></view>
+                <view class="game-dot game-dot-1"></view>
+                <view class="game-dot game-dot-2"></view>
+            </view>
+            <view class="guide-title">拦截小行星</view>
+            <view class="guide-desc">
+                驾驶下方飞船防御不断坠落的陨石。按住屏幕左右拖拽即可操控方向，飞船会自动开火。
+            </view>
+            <view class="guide-tip">滑动或拖拽操控，拦截红色陨石</view>
+        </view>
+
+        <view wx:if="{{gameOverVisible}}" class="gameover-overlay">
+            <view class="gameover-icon">
+                <view class="skull-head">
+                    <view class="skull-eye skull-eye-1"></view>
+                    <view class="skull-eye skull-eye-2"></view>
+                    <view class="skull-mouth"></view>
+                </view>
+                <view class="cross-bone cross-bone-1">
+                    <view class="bone-dot bone-dot-a"></view>
+                    <view class="bone-dot bone-dot-b"></view>
+                </view>
+                <view class="cross-bone cross-bone-2">
+                    <view class="bone-dot bone-dot-a"></view>
+                    <view class="bone-dot bone-dot-b"></view>
+                </view>
+            </view>
+            <view class="gameover-badge">任务失败</view>
+            <view class="gameover-title">飞船已被陨石摧毁</view>
+            <view class="gameover-desc">太空港已与您断开链接...</view>
+
+            <view class="score-card">
+                <view class="score-card-label">本次拦截得分</view>
+                <view class="score-card-value">{{finalScore}}</view>
+            </view>
+
+            <view class="restart-btn" bindtap="restartGame">重新起飞</view>
+        </view>
+    </view>
+
+</view>

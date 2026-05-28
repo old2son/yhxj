@@ -1,0 +1,129 @@
+:host {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.space-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+@keyframes star-breathe {
+    0% {
+        opacity: 0.35;
+        transform: scale(0.8);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.15);
+    }
+
+    100% {
+        opacity: 0.4;
+        transform: scale(0.85);
+    }
+}
+
+.star {
+    position: absolute;
+    width: 8rpx;
+    height: 8rpx;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 14rpx rgba(255, 255, 255, 0.72);
+    transform-origin: center;
+    animation-name: star-breathe;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+}
+
+.star-1 {
+    top: 140rpx;
+    left: 68rpx;
+    animation-duration: 2.8s;
+    animation-delay: 0s;
+}
+
+.star-2 {
+    top: 240rpx;
+    right: 120rpx;
+    width: 12rpx;
+    height: 12rpx;
+    background: #67e8f9;
+    animation-duration: 3.4s;
+    animation-delay: 0.4s;
+}
+
+.star-3 {
+    top: 420rpx;
+    left: 96rpx;
+    width: 6rpx;
+    height: 6rpx;
+    animation-duration: 2.4s;
+    animation-delay: 0.9s;
+}
+
+.star-4 {
+    top: 560rpx;
+    right: 88rpx;
+    width: 10rpx;
+    height: 10rpx;
+    background: #c4b5fd;
+    animation-duration: 3.1s;
+    animation-delay: 1.2s;
+}
+
+.star-5 {
+    top: 780rpx;
+    left: 150rpx;
+    width: 12rpx;
+    height: 12rpx;
+    background: #bfdbfe;
+    animation-duration: 3.8s;
+    animation-delay: 0.6s;
+}
+
+.star-6 {
+    bottom: 280rpx;
+    right: 150rpx;
+    animation-duration: 2.6s;
+    animation-delay: 1.5s;
+}
+
+.star-7 {
+    bottom: 180rpx;
+    left: 110rpx;
+    width: 10rpx;
+    height: 10rpx;
+    background: #a5f3fc;
+    animation-duration: 3.2s;
+    animation-delay: 1s;
+}
+
+.planet-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(42rpx);
+    opacity: 0.24;
+}
+
+.planet-glow-cyan {
+    top: 220rpx;
+    right: -100rpx;
+    width: 320rpx;
+    height: 320rpx;
+    background: #06b6d4;
+}
+
+.planet-glow-violet {
+    bottom: 200rpx;
+    left: -110rpx;
+    width: 340rpx;
+    height: 340rpx;
+    background: #8b5cf6;
+}

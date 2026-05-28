@@ -1,0 +1,597 @@
+page {
+    height: 100%;
+}
+
+.page-shell {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top, rgba(34, 211, 238, 0.12), transparent 30%),
+        radial-gradient(circle at bottom, rgba(124, 58, 237, 0.16), transparent 34%),
+        linear-gradient(180deg, #02020a 0%, #03001e 54%, #020617 100%);
+    color: #ffffff;
+}
+
+.page-content {
+    position: relative;
+    z-index: 5;
+    height: calc(100vh - 112rpx - env(safe-area-inset-bottom));
+}
+
+.content-inner {
+    padding: 28rpx 30rpx 40rpx;
+}
+
+.intro-card {
+    padding: 38rpx 34rpx;
+    border-radius: 36rpx;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 47, 73, 0.82));
+    border: 1rpx solid rgba(34, 211, 238, 0.18);
+    box-shadow: 0 24rpx 64rpx rgba(15, 23, 42, 0.45);
+}
+
+.intro-badge {
+    display: inline-block;
+    padding: 8rpx 18rpx;
+    border-radius: 999rpx;
+    background: rgba(34, 211, 238, 0.1);
+    color: #67e8f9;
+    font-size: 18rpx;
+    font-weight: 600;
+    letter-spacing: 3rpx;
+}
+
+.intro-title {
+    margin-top: 18rpx;
+    font-size: 46rpx;
+    line-height: 1.22;
+    font-weight: 700;
+}
+
+.intro-desc {
+    margin-top: 18rpx;
+    font-size: 24rpx;
+    line-height: 1.8;
+    color: #94a3b8;
+}
+
+.card-list {
+    margin-top: 28rpx;
+}
+
+.planet-card {
+    display: flex;
+    align-items: center;
+    gap: 22rpx;
+    padding: 28rpx;
+    margin-top: 22rpx;
+    border-radius: 30rpx;
+    background: rgba(15, 23, 42, 0.82);
+    border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.planet-card-orange { border-color: rgba(251, 146, 60, 0.18); }
+.planet-card-violet { border-color: rgba(167, 139, 250, 0.18); }
+.planet-card-teal { border-color: rgba(45, 212, 191, 0.18); }
+
+.planet-symbol {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 112rpx;
+    height: 112rpx;
+    border-radius: 28rpx;
+}
+
+.planet-symbol-orange {
+    background: rgba(251, 146, 60, 0.12);
+    color: #fb923c;
+}
+
+.planet-symbol-violet {
+    background: rgba(139, 92, 246, 0.12);
+    color: #c4b5fd;
+}
+
+.planet-symbol-teal {
+    background: rgba(20, 184, 166, 0.12);
+    color: #5eead4;
+}
+
+.icon-solar,
+.icon-blackhole,
+.icon-nebula {
+    position: relative;
+    width: 62rpx;
+    height: 62rpx;
+}
+
+.solar-core,
+.solar-ray,
+.blackhole-core,
+.blackhole-ring,
+.nebula-cloud,
+.nebula-star {
+    position: absolute;
+}
+
+.solar-core {
+    left: 15rpx;
+    top: 15rpx;
+    width: 32rpx;
+    height: 32rpx;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 20rpx currentColor;
+}
+
+.solar-ray {
+    width: 10rpx;
+    height: 4rpx;
+    border-radius: 999rpx;
+    background: currentColor;
+}
+
+.solar-ray-1 {
+    left: 26rpx;
+    top: 4rpx;
+    transform: rotate(90deg);
+}
+
+.solar-ray-2 {
+    left: 26rpx;
+    bottom: 4rpx;
+    transform: rotate(90deg);
+}
+
+.solar-ray-3 {
+    left: 4rpx;
+    top: 28rpx;
+}
+
+.solar-ray-4 {
+    right: 4rpx;
+    top: 28rpx;
+}
+
+.blackhole-core {
+    left: 18rpx;
+    top: 18rpx;
+    width: 26rpx;
+    height: 26rpx;
+    border-radius: 50%;
+    background: #020617;
+    box-shadow: 0 0 14rpx rgba(15, 23, 42, 0.7);
+}
+
+.blackhole-ring {
+    left: 10rpx;
+    top: 20rpx;
+    width: 42rpx;
+    height: 18rpx;
+    border: 4rpx solid currentColor;
+    border-radius: 50%;
+    opacity: 0.9;
+    transform: rotate(-18deg);
+}
+
+.nebula-cloud {
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+    filter: blur(2rpx);
+}
+
+.nebula-cloud-1 {
+    left: 10rpx;
+    top: 22rpx;
+    width: 22rpx;
+    height: 18rpx;
+}
+
+.nebula-cloud-2 {
+    left: 24rpx;
+    top: 14rpx;
+    width: 24rpx;
+    height: 24rpx;
+}
+
+.nebula-cloud-3 {
+    left: 34rpx;
+    top: 28rpx;
+    width: 16rpx;
+    height: 14rpx;
+}
+
+.nebula-star {
+    left: 24rpx;
+    top: 25rpx;
+    width: 8rpx;
+    height: 8rpx;
+    border-radius: 50%;
+    background: #ecfeff;
+    box-shadow: 0 0 12rpx rgba(236, 254, 255, 0.9);
+}
+
+.planet-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.planet-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10rpx;
+}
+
+.planet-title {
+    font-size: 28rpx;
+    font-weight: 700;
+}
+
+.planet-subtitle {
+    font-size: 20rpx;
+    color: #94a3b8;
+}
+
+.planet-desc {
+    margin-top: 10rpx;
+    font-size: 22rpx;
+    line-height: 1.7;
+    color: #a1a1aa;
+}
+
+.planet-badge {
+    display: inline-block;
+    margin-top: 14rpx;
+    padding: 6rpx 14rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    font-size: 18rpx;
+}
+
+.planet-arrow {
+    flex-shrink: 0;
+    color: #64748b;
+    font-size: 28rpx;
+    font-weight: 700;
+}
+
+.quiz-card {
+    margin-top: 30rpx;
+    padding: 34rpx 30rpx;
+    border-radius: 32rpx;
+    background: linear-gradient(135deg, rgba(8, 47, 73, 0.6), rgba(15, 23, 42, 0.92));
+    border: 1rpx solid rgba(34, 211, 238, 0.14);
+}
+
+.quiz-badge {
+    display: inline-block;
+    padding: 8rpx 16rpx;
+    border-radius: 999rpx;
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
+    font-size: 18rpx;
+    font-weight: 700;
+    letter-spacing: 2rpx;
+}
+
+.quiz-title {
+    margin-top: 20rpx;
+    font-size: 30rpx;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.quiz-options {
+    margin-top: 24rpx;
+}
+
+.quiz-option {
+    padding: 24rpx;
+    margin-top: 16rpx;
+    border-radius: 24rpx;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1rpx solid rgba(255, 255, 255, 0.06);
+    font-size: 24rpx;
+    line-height: 1.6;
+    color: #d4d4d8;
+}
+
+.quiz-option-correct {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.26);
+    color: #6ee7b7;
+}
+
+.quiz-option-wrong {
+    background: rgba(244, 63, 94, 0.14);
+    border-color: rgba(244, 63, 94, 0.26);
+    color: #fda4af;
+}
+
+.quiz-option-disabled {
+    opacity: 0.58;
+}
+
+.quiz-feedback {
+    margin-top: 22rpx;
+    font-size: 22rpx;
+    line-height: 1.6;
+    font-weight: 600;
+    text-align: center;
+}
+
+.quiz-feedback-correct {
+    color: #6ee7b7;
+}
+
+.quiz-feedback-wrong {
+    color: #fda4af;
+}
+
+.quiz-reset {
+    margin-top: 20rpx;
+    text-align: center;
+    font-size: 22rpx;
+    color: #22d3ee;
+}
+
+.tabbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    height: calc(112rpx + env(safe-area-inset-bottom));
+    padding: 0 18rpx env(safe-area-inset-bottom);
+    background: rgba(2, 6, 23, 0.94);
+    border-top: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10rpx;
+    color: #71717a;
+}
+
+.tab-item-active {
+    color: #22d3ee;
+}
+
+.tab-icon {
+    position: relative;
+    width: 42rpx;
+    height: 42rpx;
+}
+
+.tab-icon-home .home-body,
+.tab-icon-home .home-window,
+.tab-icon-home .home-flame,
+.tab-icon-orbit .orbit-ring,
+.tab-icon-orbit .orbit-planet,
+.tab-icon-game .game-body,
+.tab-icon-game .game-pad,
+.tab-icon-game .game-dot {
+    position: absolute;
+}
+
+.tab-icon-home .home-body {
+    left: 12rpx;
+    top: 4rpx;
+    width: 18rpx;
+    height: 24rpx;
+    border-radius: 12rpx 12rpx 8rpx 8rpx;
+    background: currentColor;
+    transform: rotate(18deg);
+}
+
+.tab-icon-home .home-window {
+    left: 18rpx;
+    top: 10rpx;
+    width: 6rpx;
+    height: 6rpx;
+    border-radius: 50%;
+    background: rgba(2, 6, 23, 0.9);
+}
+
+.tab-icon-home .home-flame {
+    left: 14rpx;
+    top: 26rpx;
+    width: 10rpx;
+    height: 12rpx;
+    border-radius: 0 0 10rpx 10rpx;
+    background: linear-gradient(180deg, #f59e0b 0%, #fb7185 100%);
+}
+
+.tab-icon-orbit .orbit-ring {
+    left: 5rpx;
+    top: 10rpx;
+    width: 30rpx;
+    height: 18rpx;
+    border: 3rpx solid currentColor;
+    border-radius: 50%;
+    transform: rotate(-22deg);
+}
+
+.tab-icon-orbit .orbit-planet {
+    right: 6rpx;
+    top: 8rpx;
+    width: 10rpx;
+    height: 10rpx;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 10rpx currentColor;
+}
+
+.tab-icon-game .game-body {
+    left: 5rpx;
+    top: 10rpx;
+    width: 32rpx;
+    height: 20rpx;
+    border-radius: 14rpx 14rpx 18rpx 18rpx;
+    border: 3rpx solid currentColor;
+}
+
+.tab-icon-game .game-pad-h {
+    left: 12rpx;
+    top: 18rpx;
+    width: 10rpx;
+    height: 3rpx;
+    border-radius: 999rpx;
+    background: currentColor;
+}
+
+.tab-icon-game .game-pad-v {
+    left: 15rpx;
+    top: 15rpx;
+    width: 3rpx;
+    height: 10rpx;
+    border-radius: 999rpx;
+    background: currentColor;
+}
+
+.tab-icon-game .game-dot {
+    width: 5rpx;
+    height: 5rpx;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.tab-icon-game .game-dot-1 {
+    right: 12rpx;
+    top: 16rpx;
+}
+
+.tab-icon-game .game-dot-2 {
+    right: 8rpx;
+    top: 22rpx;
+}
+
+.tab-icon {
+    font-size: 24rpx;
+}
+
+.tab-text {
+    font-size: 20rpx;
+}
+
+.modal-mask {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.72);
+}
+
+.modal-panel {
+    width: 100%;
+    max-height: 80vh;
+    padding: 24rpx 32rpx 42rpx;
+    border-radius: 40rpx 40rpx 0 0;
+    background: #0f172a;
+    border-top: 1rpx solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-handle {
+    width: 96rpx;
+    height: 8rpx;
+    margin: 0 auto 28rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.modal-symbol {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 108rpx;
+    height: 108rpx;
+    margin: 0 auto;
+    border-radius: 32rpx;
+}
+
+.modal-symbol-orange {
+    background: rgba(251, 146, 60, 0.12);
+    color: #fb923c;
+}
+
+.modal-symbol-violet {
+    background: rgba(139, 92, 246, 0.12);
+    color: #c4b5fd;
+}
+
+.modal-symbol-teal {
+    background: rgba(20, 184, 166, 0.12);
+    color: #5eead4;
+}
+
+.modal-title {
+    margin-top: 24rpx;
+    text-align: center;
+    font-size: 30rpx;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.modal-badge {
+    display: inline-block;
+    margin: 18rpx auto 0;
+    padding: 8rpx 16rpx;
+    border-radius: 999rpx;
+    background: rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    font-size: 18rpx;
+}
+
+.modal-section {
+    margin-top: 26rpx;
+}
+
+.modal-text {
+    font-size: 24rpx;
+    line-height: 1.8;
+    color: #d4d4d8;
+}
+
+.fact-box {
+    margin-top: 24rpx;
+    padding: 26rpx 24rpx;
+    border-radius: 26rpx;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.fact-box-title {
+    font-size: 24rpx;
+    font-weight: 700;
+    color: #fde68a;
+}
+
+.fact-box-text {
+    margin-top: 14rpx;
+    font-size: 22rpx;
+    line-height: 1.7;
+    color: #a1a1aa;
+}
+
+.modal-btn {
+    margin-top: 30rpx;
+    padding: 24rpx 0;
+    border-radius: 24rpx;
+    text-align: center;
+    font-size: 24rpx;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(90deg, #06b6d4 0%, #4f46e5 100%);
+}

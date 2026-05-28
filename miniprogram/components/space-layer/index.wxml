@@ -1,0 +1,11 @@
+<view class="space-layer">
+    <view class="star star-1"></view>
+    <view class="star star-2"></view>
+    <view class="star star-3"></view>
+    <view class="star star-4"></view>
+    <view class="star star-5"></view>
+    <view class="star star-6"></view>
+    <view class="star star-7"></view>
+    <view class="planet-glow planet-glow-cyan"></view>
+    <view class="planet-glow planet-glow-violet"></view>
+</view>
