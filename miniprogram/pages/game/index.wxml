@@ -36,9 +36,9 @@
             </view>
             <view class="guide-title">拦截小行星</view>
             <view class="guide-desc">
-                驾驶下方飞船防御不断坠落的陨石。按住屏幕左右拖拽即可操控方向，飞船会自动开火。
+                驾驶下方飞船防御不断坠落的陨石。左右倾斜手机即可操控方向，飞船会自动开火。
             </view>
-            <view class="guide-tip">滑动或拖拽操控，拦截红色陨石</view>
+            <view class="guide-tip">{{controlGuideText}}</view>
         </view>
 
         <view wx:if="{{gameOverVisible}}" class="gameover-overlay">
