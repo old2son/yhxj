@@ -49,6 +49,7 @@ Page({
         guideVisible: true,
         gameOverVisible: false,
         finalScore: 0,
+        controlGuideText: '左右倾斜手机移动飞船，也可按住屏幕拖拽操控',
     },
 
     canvasNode: null as any,
@@ -76,6 +77,9 @@ Page({
     hasStarted: false,
     spawnCounter: 0,
     shootCounter: 0,
+    motionHandler: null as WechatMiniprogram.OnDeviceMotionChangeCallback | null,
+    motionControlActive: false,
+    motionTilt: 0,
 
     onReady() {
         this.initCanvas();
@@ -97,6 +101,7 @@ Page({
 
     onUnload() {
         this.stopLoop();
+        this.stopMotionControl();
     },
 
     initCanvas() {
@@ -188,12 +193,14 @@ Page({
             guideVisible: false,
             controlButtonText: '暂停游戏',
         });
+        this.startMotionControl();
         this.startLoop();
     },
 
     pauseGame() {
         this.isPlaying = false;
         this.stopLoop();
+        this.stopMotionControl();
         this.setData({
             controlButtonText: '继续游戏',
         });
@@ -208,6 +215,7 @@ Page({
             gameOverVisible: false,
             controlButtonText: '暂停游戏',
         });
+        this.startMotionControl();
         this.startLoop();
     },
 
@@ -224,6 +232,64 @@ Page({
             clearInterval(this.loopTimer);
             this.loopTimer = undefined;
         }
+    },
+
+    startMotionControl() {
+        if (this.motionControlActive) {
+            return;
+        }
+
+        if (!this.motionHandler) {
+            this.motionHandler = (result) => {
+                if (!this.isPlaying) {
+                    return;
+                }
+
+                const deadZone = 0.035;
+                const maxTilt = 0.55;
+                const tilt = Math.max(-maxTilt, Math.min(maxTilt, result.gamma));
+                this.motionTilt = Math.abs(tilt) <= deadZone ? 0 : tilt / maxTilt;
+            };
+        }
+
+        wx.startDeviceMotionListening({
+            interval: 'game',
+            success: () => {
+                if (!this.isPlaying) {
+                    wx.stopDeviceMotionListening();
+                    return;
+                }
+
+                if (this.motionHandler) {
+                    wx.onDeviceMotionChange(this.motionHandler);
+                }
+                this.motionControlActive = true;
+                this.setData({
+                    controlGuideText: '左右倾斜手机移动飞船，按住屏幕拖拽也可操控',
+                });
+            },
+            fail: () => {
+                this.motionTilt = 0;
+                this.setData({
+                    controlGuideText: '当前设备无法启用陀螺仪，可按住屏幕左右拖拽操控',
+                });
+            },
+        });
+    },
+
+    stopMotionControl() {
+        this.motionTilt = 0;
+
+        if (!this.motionControlActive) {
+            return;
+        }
+
+        if (this.motionHandler) {
+            wx.offDeviceMotionChange(this.motionHandler);
+        }
+
+        wx.stopDeviceMotionListening();
+        this.motionControlActive = false;
     },
 
     handleTouch(event: WechatMiniprogram.TouchEvent) {
@@ -250,6 +316,7 @@ Page({
             return;
         }
 
+        this.applyMotionControl();
         this.player.x += (this.player.targetX - this.player.x) * 0.22;
 
         this.shootCounter += 1;
@@ -340,6 +407,19 @@ Page({
         }
     },
 
+    applyMotionControl() {
+        if (!this.motionTilt) {
+            return;
+        }
+
+        const halfWidth = this.player.width / 2;
+        const nextX = this.player.targetX + this.motionTilt * 7;
+        this.player.targetX = Math.max(
+            halfWidth,
+            Math.min(this.canvasWidth - halfWidth, nextX),
+        );
+    },
+
     spawnAsteroid() {
         const radius = Math.random() * 14 + 12;
         this.asteroids.push({
@@ -383,6 +463,7 @@ Page({
     gameOver() {
         this.isPlaying = false;
         this.stopLoop();
+        this.stopMotionControl();
         this.setData({
             gameOverVisible: true,
             finalScore: this.score,
