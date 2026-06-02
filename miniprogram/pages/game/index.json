@@ -1,5 +1,6 @@
 {
     "navigationBarTitleText": "拦截游戏",
+    "disableScroll": true,
     "backgroundColor": "#03001e",
     "backgroundTextStyle": "light",
     "usingComponents": {
