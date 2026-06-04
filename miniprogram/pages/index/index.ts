@@ -5,20 +5,20 @@ type QuoteItem = {
 
 const quotes: QuoteItem[] = [
     {
-        text: "星空最美妙的地方，在于所有的尘埃最终都会重新组合，诞生出无限奇迹。",
-        author: "卡尔·萨根《宇宙》",
+        text: '星空最美妙的地方，在于所有的尘埃最终都会重新组合，诞生出无限奇迹。',
+        author: '卡尔·萨根《宇宙》',
     },
     {
-        text: "我们也是尘埃的一部分。当仰望星空时，你实际上是宇宙在审视自身。",
-        author: "艾伦·沃茨《感知世界》",
+        text: '我们也是尘埃的一部分。当仰望星空时，你实际上是宇宙在审视自身。',
+        author: '艾伦·沃茨《感知世界》',
     },
     {
-        text: "探索宇宙是人类写给未知的一封不寄回信的情书。",
-        author: "《深空漫游》编导",
+        text: '探索宇宙是人类写给未知的一封不寄回信的情书。',
+        author: '《深空漫游》编导',
     },
     {
-        text: "在这个微小的淡蓝色圆点上，有你爱的每一个人，你听说过的每一个人。",
-        author: "卡尔·萨根",
+        text: '在这个微小的淡蓝色圆点上，有你爱的每一个人，你听说过的每一个人。',
+        author: '卡尔·萨根',
     },
 ];
 
@@ -27,12 +27,12 @@ Page({
         progress: 64.8,
         quoteIndex: 0,
         currentQuote: quotes[0],
-        funFactTitle: "银河系里有多少颗恒星？",
-        funFactBrief: "约1000亿至4000亿颗",
+        funFactTitle: '银河系里有多少颗恒星？',
+        funFactBrief: '约1000亿至4000亿颗',
         showFactModal: false,
         loadingVisible: true,
         loadingPercent: 0,
-        loadingTip: "正在链接太空港口...",
+        loadingTip: '正在链接太空港口...',
     },
 
     loadingTimer: 0 as number | undefined,
@@ -42,9 +42,10 @@ Page({
     },
 
     onShow() {
-        const tabBar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
-        if (tabBar && typeof (tabBar as any).setActive === "function") {
-            (tabBar as any).setActive("/pages/index/index");
+        const tabBar =
+            typeof this.getTabBar === 'function' ? this.getTabBar() : null;
+        if (tabBar && typeof (tabBar as any).setActive === 'function') {
+            (tabBar as any).setActive('/pages/index/index');
         }
     },
 
@@ -56,11 +57,11 @@ Page({
 
     runLoadingAnimation() {
         const tips = [
-            "正在加载星际引擎...",
-            "连接太空港口信息...",
-            "装载UFO导览模块...",
-            "渲染银河星图...",
-            "正在降落主甲板...",
+            '正在加载星际引擎...',
+            '连接太空港口信息...',
+            '装载UFO导览模块...',
+            '渲染银河星图...',
+            '正在降落主甲板...',
         ];
 
         let percent = 0;
@@ -112,13 +113,13 @@ Page({
 
     goExplore() {
         wx.switchTab({
-            url: "/pages/explore/index",
+            url: '/pages/explore/index',
         });
     },
 
     goGame() {
         wx.switchTab({
-            url: "/pages/game/index",
+            url: '/pages/game/index',
         });
     },
 
@@ -126,7 +127,7 @@ Page({
         const { name } = event.currentTarget.dataset;
         wx.showToast({
             title: `${name}开发中`,
-            icon: "none",
+            icon: 'none',
         });
     },
 
@@ -143,4 +144,26 @@ Page({
     },
 
     noop() {},
+
+    requestSubscribe() {
+        wx.requestSubscribeMessage({
+            tmplIds: ['H9Sw71n5nEPxOxfU4qGoT9rkd1rjxbJ1jdfkBOFr9XE'],
+            success(res) {
+                console.log('订阅结果', res);
+
+                if (
+                    res['H9Sw71n5nEPxOxfU4qGoT9rkd1rjxbJ1jdfkBOFr9XE'] ===
+                    'accept'
+                ) {
+                    wx.showToast({
+                        title: '订阅成功',
+                        icon: 'success',
+                    });
+                }
+            },
+            fail(err) {
+                console.log('订阅失败', err);
+            },
+        });
+    }
 });

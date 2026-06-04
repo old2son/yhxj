@@ -49,9 +49,7 @@
                 </view>
             </view>
             <view class="section-grid">
-                <view
-                    class="action-card action-card-cyan"
-                    bindtap="goExplore">
+                <view class="action-card action-card-cyan" bindtap="goExplore">
                     <view class="action-icon action-icon-book">
                         <view class="book-spine"></view>
                         <view class="book-cover"></view>
@@ -61,9 +59,7 @@
                     <view class="action-title">宇宙科普书</view>
                     <view class="action-desc">解锁八大行星与宇宙现象</view>
                 </view>
-                <view
-                    class="action-card action-card-pink"
-                    bindtap="goGame">
+                <view class="action-card action-card-pink" bindtap="goGame">
                     <view class="action-icon action-icon-ufo">
                         <view class="ufo-dome"></view>
                         <view class="ufo-body"></view>
@@ -94,6 +90,8 @@
                 </view>
                 <view class="fact-btn" bindtap="openFactModal">去看看</view>
             </view>
+
+            <view class="fact-btn" bindtap="requestSubscribe"> 订阅消息 </view>
         </view>
     </scroll-view>
     <view wx:if="{{showFactModal}}" class="modal-mask" bindtap="closeFactModal">
