@@ -165,5 +165,9 @@ Page({
                 console.log('订阅失败', err);
             },
         });
-    }
+    },
+
+    onShareAppMessage() {},
+
+    onShareTimeline() {},
 });
