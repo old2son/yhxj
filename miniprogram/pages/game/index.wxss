@@ -7,8 +7,16 @@ page {
     height: 100vh;
     overflow: hidden;
     background:
-        radial-gradient(circle at top, rgba(34, 211, 238, 0.12), transparent 28%),
-        radial-gradient(circle at bottom, rgba(244, 114, 182, 0.14), transparent 34%),
+        radial-gradient(
+            circle at top,
+            rgba(34, 211, 238, 0.12),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at bottom,
+            rgba(244, 114, 182, 0.14),
+            transparent 34%
+        ),
         linear-gradient(180deg, #02020a 0%, #03001e 56%, #020617 100%);
     color: #ffffff;
 }
@@ -458,4 +466,90 @@ page {
 
 .cross-bone-2 {
     transform: rotate(-32deg);
+}
+
+.asteroid-icon {
+    position: relative;
+    width: 80rpx;
+    height: 80rpx;
+    color: currentColor;
+}
+
+/* 飞船 */
+.ship {
+    position: absolute;
+    left: 34rpx;
+    bottom: 18rpx;
+
+    width: 0;
+    height: 0;
+
+    border-left: 8rpx solid transparent;
+    border-right: 8rpx solid transparent;
+    border-bottom: 22rpx solid currentColor;
+}
+
+/* 激光 */
+.laser {
+    position: absolute;
+    left: 39rpx;
+    top: 10rpx;
+
+    width: 3rpx;
+    height: 22rpx;
+
+    border-radius: 999rpx;
+    background: currentColor;
+}
+
+/* 小行星 */
+.asteroid {
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* 左上 */
+.asteroid-1 {
+    left: 10rpx;
+    top: 15rpx;
+
+    width: 14rpx;
+    height: 14rpx;
+}
+
+/* 右上 */
+.asteroid-2 {
+    right: 8rpx;
+    top: 25rpx;
+
+    width: 18rpx;
+    height: 18rpx;
+}
+
+/* 被击中的 */
+.asteroid-3 {
+    right: 22rpx;
+    top: 8rpx;
+
+    width: 8rpx;
+    height: 8rpx;
+}
+
+/* 爆炸碎片 */
+.fragment {
+    position: absolute;
+    width: 5rpx;
+    height: 5rpx;
+    background: currentColor;
+}
+
+.fragment-1 {
+    left: 20rpx;
+    top: 35rpx;
+}
+
+.fragment-2 {
+    right: 12rpx;
+    top: 48rpx;
 }

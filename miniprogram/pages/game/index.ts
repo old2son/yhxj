@@ -59,7 +59,6 @@ Page({
     canvasHeight: 0,
     stageRect:
         null as WechatMiniprogram.BoundingClientRectCallbackResult | null,
-    loopTimer: 0 as number | undefined,
     backgroundStars: [] as StarPoint[],
     bullets: [] as Bullet[],
     asteroids: [] as Asteroid[],
@@ -80,6 +79,9 @@ Page({
     motionHandler: null as WechatMiniprogram.OnDeviceMotionChangeCallback | null,
     motionControlActive: false,
     motionTilt: 0,
+    touchStartX: 0,
+    isDragging: false,
+    animationFrameId: null as number | unknown,
 
     onReady() {
         this.initCanvas();
@@ -220,17 +222,24 @@ Page({
     },
 
     startLoop() {
-        this.stopLoop();
-        this.loopTimer = setInterval(() => {
+        const loop = () => {
+            if (!this.isPlaying) {
+                return;
+            }
+
             this.updateGame();
             this.drawGame();
-        }, 16);
+
+            this.animationFrameId = this.canvasNode.requestAnimationFrame(loop);
+        };
+
+        this.animationFrameId = this.canvasNode.requestAnimationFrame(loop);
     },
 
     stopLoop() {
-        if (this.loopTimer) {
-            clearInterval(this.loopTimer);
-            this.loopTimer = undefined;
+        if (this.animationFrameId) {
+            this.canvasNode.cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
         }
     },
 
@@ -245,10 +254,10 @@ Page({
                     return;
                 }
 
-                const deadZone = 0.035;
-                const maxTilt = 0.55;
+                const deadZone = 0.035; // 死区
+                const maxTilt = 30; // 最大倾斜
                 const tilt = Math.max(-maxTilt, Math.min(maxTilt, result.gamma));
-                this.motionTilt = Math.abs(tilt) <= deadZone ? 0 : tilt / maxTilt;
+                this.motionTilt = Math.abs(tilt) <= deadZone  ? 0  : -(tilt / maxTilt);
             };
         }
 
@@ -293,22 +302,58 @@ Page({
     },
 
     handleTouch(event: WechatMiniprogram.TouchEvent) {
-        if (!this.isPlaying || !this.stageRect) {
-            return;
-        }
+        const touch = event.touches[0];
 
-        const touch = event.touches[0] || event.changedTouches[0];
         if (!touch) {
             return;
         }
 
+        this.touchStartX = touch.clientX;
+        this.isDragging = false;
+    },
+
+    handleTouchMove(event: WechatMiniprogram.TouchEvent) {
+        if (!this.isPlaying || !this.stageRect) {
+            return;
+        }
+
+        const touch = event.touches[0];
+
+        if (!touch) {
+            return;
+        }
+
+
+        const moveDistance = Math.abs(
+            touch.clientX - this.touchStartX
+        );
+
+
+        // 小于阈值认为是点击
+        if (!this.isDragging) {
+            if (moveDistance < 10) {
+                return;
+            }
+
+            this.isDragging = true;
+        }
+
+
         const nextX = touch.clientX - this.stageRect.left;
+
         const halfWidth = this.player.width / 2;
 
         this.player.targetX = Math.max(
             halfWidth,
-            Math.min(this.canvasWidth - halfWidth, nextX),
+            Math.min(
+                this.canvasWidth - halfWidth,
+                nextX
+            )
         );
+    },
+
+    handleTouchEnd() {
+         this.isDragging = false;
     },
 
     updateGame() {
@@ -320,12 +365,12 @@ Page({
         this.player.x += (this.player.targetX - this.player.x) * 0.22;
 
         this.shootCounter += 1;
-        if (this.shootCounter >= 12) {
+        if (this.shootCounter >= 24) {
             this.bullets.push({
                 x: this.player.x,
                 y: this.player.y - 12,
                 radius: 4,
-                speed: 12,
+                speed: 5,
             });
             this.shootCounter = 0;
         }
@@ -412,8 +457,10 @@ Page({
             return;
         }
 
+        const speed = 10;
+
         const halfWidth = this.player.width / 2;
-        const nextX = this.player.targetX + this.motionTilt * 7;
+        const nextX = this.player.targetX + this.motionTilt * speed;
         this.player.targetX = Math.max(
             halfWidth,
             Math.min(this.canvasWidth - halfWidth, nextX),

@@ -13,26 +13,47 @@
             </view>
         </view>
 
-        <view class="control-btn" bindtap="toggleGame">{{controlButtonText}}</view>
+        <view class="control-btn" bindtap="toggleGame"
+            >{{controlButtonText}}</view
+        >
     </view>
 
     <view
         id="gameStage"
         class="game-stage"
-        bindtouchstart="handleTouch"
-        bindtouchmove="handleTouch">
+        bindtouchstart="handleTouchStart"
+        bindtouchmove="handleTouchMove"
+        bindtouchend="handleTouchEnd">
         <canvas
             id="gameCanvas"
             type="2d"
             class="game-canvas {{guideVisible || gameOverVisible ? 'game-canvas-hidden' : ''}}"></canvas>
 
-        <view wx:if="{{guideVisible && !gameOverVisible}}" class="guide-overlay">
-            <view class="guide-icon">
+        <view
+            wx:if="{{guideVisible && !gameOverVisible}}"
+            class="guide-overlay">
+            <!-- <view class="guide-icon">
                 <view class="game-body"></view>
                 <view class="game-pad game-pad-h"></view>
                 <view class="game-pad game-pad-v"></view>
                 <view class="game-dot game-dot-1"></view>
                 <view class="game-dot game-dot-2"></view>
+            </view> -->
+            <view class="guide-icon asteroid-icon">
+                <!-- 飞船 -->
+                <view class="ship"></view>
+
+                <!-- 激光 -->
+                <view class="laser"></view>
+
+                <!-- 小行星 -->
+                <view class="asteroid asteroid-1"></view>
+                <view class="asteroid asteroid-2"></view>
+                <view class="asteroid asteroid-3"></view>
+
+                <!-- 爆炸碎片 -->
+                <view class="fragment fragment-1"></view>
+                <view class="fragment fragment-2"></view>
             </view>
             <view class="guide-title">拦截小行星</view>
             <view class="guide-desc">
@@ -69,5 +90,4 @@
             <view class="restart-btn" bindtap="restartGame">重新起飞</view>
         </view>
     </view>
-
 </view>
