@@ -48,6 +48,7 @@ Page({
         controlButtonText: '开始游戏',
         guideVisible: true,
         gameOverVisible: false,
+        crashAnimating: false,
         finalScore: 0,
         controlGuideText: '左右倾斜手机移动飞船，也可按住屏幕拖拽操控',
     },
@@ -82,6 +83,8 @@ Page({
     touchStartX: 0,
     isDragging: false,
     animationFrameId: null as number | unknown,
+    crashFrame: 0,
+    crashDuration: 42,
 
     onReady() {
         this.initCanvas();
@@ -98,6 +101,11 @@ Page({
     onHide() {
         if (this.isPlaying) {
             this.pauseGame();
+            return;
+        }
+
+        if (this.data.crashAnimating) {
+            this.gameOver();
         }
     },
 
@@ -174,11 +182,16 @@ Page({
             score: 0,
             livesText: '♥♥♥',
             finalScore: 0,
+            crashAnimating: false,
             gameOverVisible: false,
         });
     },
 
     toggleGame() {
+        if (this.data.crashAnimating) {
+            return;
+        }
+
         if (!this.ctx) {
             this.initCanvas();
             return;
@@ -198,6 +211,21 @@ Page({
         this.startMotionControl();
         this.startLoop();
     },
+
+    startGame() {
+        if (this.data.crashAnimating) {
+            return;
+        }
+
+        this.hasStarted = true;
+        this.isPlaying = true;
+        this.setData({
+            guideVisible: false,
+            controlButtonText: '暂停游戏',
+        });
+        this.startMotionControl();
+        this.startLoop();
+    },  
 
     pauseGame() {
         this.isPlaying = false;
@@ -222,15 +250,23 @@ Page({
     },
 
     startLoop() {
+        this.stopLoop();
+
         const loop = () => {
-            if (!this.isPlaying) {
+            if (!this.isPlaying && !this.data.crashAnimating) {
+                this.animationFrameId = null;
                 return;
             }
 
             this.updateGame();
             this.drawGame();
 
-            this.animationFrameId = this.canvasNode.requestAnimationFrame(loop);
+            if (this.isPlaying || this.data.crashAnimating) {
+                this.animationFrameId = this.canvasNode.requestAnimationFrame(loop);
+                return;
+            }
+
+            this.animationFrameId = null;
         };
 
         this.animationFrameId = this.canvasNode.requestAnimationFrame(loop);
@@ -301,7 +337,7 @@ Page({
         this.motionControlActive = false;
     },
 
-    handleTouch(event: WechatMiniprogram.TouchEvent) {
+    handleTouchStart(event: WechatMiniprogram.TouchEvent) {
         const touch = event.touches[0];
 
         if (!touch) {
@@ -357,6 +393,12 @@ Page({
     },
 
     updateGame() {
+        if (this.data.crashAnimating) {
+            this.updateCrashAnimation();
+            this.updateParticles();
+            return;
+        }
+
         if (!this.isPlaying) {
             return;
         }
@@ -395,6 +437,13 @@ Page({
             asteroid.x += asteroid.speedX;
             asteroid.y += asteroid.speedY;
             asteroid.rotation += asteroid.rotationSpeed;
+
+            const outOfLeftEdge = asteroid.x + asteroid.radius < -20;
+            const outOfRightEdge = asteroid.x - asteroid.radius > this.canvasWidth + 20;
+            if (outOfLeftEdge || outOfRightEdge) {
+                this.asteroids.splice(index, 1);
+                continue;
+            }
 
             if (asteroid.y - asteroid.radius > this.canvasHeight + 20) {
                 this.asteroids.splice(index, 1);
@@ -441,15 +490,7 @@ Page({
             }
         }
 
-        for (let index = this.particles.length - 1; index >= 0; index -= 1) {
-            const particle = this.particles[index];
-            particle.x += particle.speedX;
-            particle.y += particle.speedY;
-            particle.alpha -= particle.decay;
-            if (particle.alpha <= 0) {
-                this.particles.splice(index, 1);
-            }
-        }
+        this.updateParticles();
     },
 
     applyMotionControl() {
@@ -495,6 +536,42 @@ Page({
         }
     },
 
+    updateCrashAnimation() {
+        this.crashFrame += 1;
+        const progress = Math.min(1, this.crashFrame / this.crashDuration);
+
+        this.player.targetX = this.player.x;
+        this.player.y += 0.65 + progress * 1.3;
+
+        if (this.crashFrame === 1) {
+            this.createExplosion(this.player.x, this.player.y, '#f59e0b');
+        }
+
+        if (this.crashFrame % 6 === 0) {
+            this.createExplosion(
+                this.player.x + (Math.random() - 0.5) * 28,
+                this.player.y + (Math.random() - 0.5) * 18,
+                progress > 0.55 ? '#fb7185' : '#f59e0b',
+            );
+        }
+
+        if (progress >= 1) {
+            this.gameOver();
+        }
+    },
+
+    updateParticles() {
+        for (let index = this.particles.length - 1; index >= 0; index -= 1) {
+            const particle = this.particles[index];
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            particle.alpha -= particle.decay;
+            if (particle.alpha <= 0) {
+                this.particles.splice(index, 1);
+            }
+        }
+    },
+
     loseLife() {
         this.lives -= 1;
         const heartMap = ['', '♥', '♥♥', '♥♥♥'];
@@ -503,16 +580,33 @@ Page({
         });
 
         if (this.lives <= 0) {
-            this.gameOver();
+            this.triggerCrashAnimation();
         }
+    },
+
+    triggerCrashAnimation() {
+        if (this.data.crashAnimating) {
+            return;
+        }
+
+        this.isPlaying = false;
+        this.stopMotionControl();
+        this.crashFrame = 0;
+        this.setData({
+            crashAnimating: true,
+            controlButtonText: '飞船坠毁中',
+        });
     },
 
     gameOver() {
         this.isPlaying = false;
+        this.bullets = [];
+        this.asteroids = [];
         this.stopLoop();
         this.stopMotionControl();
         this.setData({
-            gameOverVisible: true,
+            crashAnimating: false,
+            gameOverVisible: false,
             finalScore: this.score,
             controlButtonText: '开始游戏',
         });
@@ -550,10 +644,36 @@ Page({
     drawPlayer() {
         const ctx = this.ctx;
         const { x, y, width, height } = this.player;
+        const crashAnimating = this.data.crashAnimating;
+        const progress = crashAnimating
+            ? Math.min(1, this.crashFrame / this.crashDuration)
+            : 0;
+        const shakeX = crashAnimating
+            ? Math.sin(this.crashFrame * 1.4) * (1 - progress) * 10
+            : 0;
+        const shakeY = crashAnimating
+            ? Math.cos(this.crashFrame * 1.8) * (1 - progress) * 5
+            : 0;
+        const rotation = crashAnimating
+            ? Math.sin(this.crashFrame * 0.9) * 0.12 + progress * 0.45
+            : 0;
+        const alpha = crashAnimating ? Math.max(0.12, 1 - progress * 0.7) : 1;
 
         ctx.save();
+        ctx.translate(x + shakeX, y + shakeY);
+        ctx.rotate(rotation);
+        ctx.scale(1 - progress * 0.18, 1 - progress * 0.12);
+        ctx.globalAlpha = alpha;
+
+        if (crashAnimating) {
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 12 - progress * 4, 14 + progress * 6, 0, 0, Math.PI * 2);
+            ctx.fillStyle = progress > 0.55 ? 'rgba(251, 113, 133, 0.75)' : 'rgba(245, 158, 11, 0.75)';
+            ctx.fill();
+        }
+
         ctx.beginPath();
-        ctx.arc(x, y - 4, 11, Math.PI, Math.PI * 2);
+        ctx.arc(0, -4, 11, Math.PI, Math.PI * 2);
         ctx.fillStyle = 'rgba(34, 211, 238, 0.65)';
         ctx.fill();
         ctx.strokeStyle = '#22d3ee';
@@ -561,7 +681,7 @@ Page({
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.ellipse(x, y + 6, width / 2, height / 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 6, width / 2, height / 3, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#1e293b';
         ctx.fill();
         ctx.strokeStyle = '#94a3b8';
@@ -569,8 +689,8 @@ Page({
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.arc(x, y + 6, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#10b981';
+        ctx.arc(0, 6, 4, 0, Math.PI * 2);
+        ctx.fillStyle = crashAnimating ? '#fb7185' : '#10b981';
         ctx.fill();
         ctx.restore();
     },

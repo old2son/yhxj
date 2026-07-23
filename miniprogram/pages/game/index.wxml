@@ -1,7 +1,7 @@
 <view class="page-shell">
     <space-layer></space-layer>
 
-    <view class="game-head">
+    <view class="game-head" wx:if="{{!guideVisible && !gameOverVisible && !crashAnimating}}">
         <view class="game-stats">
             <view class="stat-block">
                 <text class="stat-label">分数</text>
@@ -60,6 +60,7 @@
                 驾驶下方飞船防御不断坠落的陨石。左右倾斜手机即可操控方向，飞船会自动开火。
             </view>
             <view class="guide-tip">{{controlGuideText}}</view>
+            <view class="start-btn" bindtap="startGame">开始</view>
         </view>
 
         <view wx:if="{{gameOverVisible}}" class="gameover-overlay">

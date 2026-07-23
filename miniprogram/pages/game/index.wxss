@@ -203,6 +203,7 @@ page {
     text-shadow: 0 0 18rpx rgba(34, 211, 238, 0.22);
 }
 
+.start-btn,
 .restart-btn {
     margin-top: 28rpx;
     min-width: 260rpx;
